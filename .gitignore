@@ -285,3 +285,5 @@ buck-out/
 *.rdb
 
 # End of https://www.toptal.com/developers/gitignore/api/java,reactnative,redis
+
+venv/
