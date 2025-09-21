@@ -7,20 +7,21 @@ services:
   # api 컨테이너
   api:
     # ./api 디렉터리의 Dockerfile을 사용하여 이미지를 빌드한다
-    build: ./api
+    build: ./back-end
     
     # 컨테이너가 실행될 때 수행할 명령어
     # Gunicorn을 사용하여 Django 애플리케이션을 실행합니다.
     # your_project는 실제 프로젝트 이름으로 변경해야한다.
-    command: gunicorn your_project.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn yunissaem_api.wsgi:application --bind 0.0.0.0:8000
     
-    # [./api:/app] : 호스트의 ./api 디렉터리를 컨테이너의 /app 디렉터리와 동기화한다
+    # [./back-end:/app] : 호스트의 ./back-end 디렉터리를 컨테이너의 /app 디렉터리와 동기화한다
     # 코드 변경 시 컨테이너를 다시 빌드할 필요가 없다
     volumes:
-      - ./api:/app
+      - ./back-end:/app
     
     # 8000번 포트를 다른 컨테이너에 노출시킨다.
     # Nginx가 이 포트로 요청을 전달한다.
+    # nginx.conf에 django 포트에 대한 내용이 작성되어 있으므로 yml에  따로 작성하지 않아도 된다.
     expose:
       - 8000
 
@@ -57,6 +58,7 @@ services:
   redis:
     # 경량화된 Redis 이미지를 사용
     image: redis:alpine
+  
 
   # nginx 컨테이너
   nginx:
