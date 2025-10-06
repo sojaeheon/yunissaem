@@ -6,50 +6,93 @@ import {
   FlatList,
   TouchableOpacity,
   Image, // 추가
+  ScrollView,
 } from "react-native";
 import CategoryMenu from "../screens/CategoryMenu";
 
 // 썸네일 이미지 URL 추가 예시
 const dummyLessons = [
-  { id: "1", title: "React Native 기초", category: "프로그래밍", thumbnail: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308" },
-  { id: "2", title: "JavaScript ES6+", category: "프로그래밍", thumbnail: "https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg" },
-  { id: "3", title: "Python 데이터 분석", category: "프로그래밍", thumbnail: "https://source.unsplash.com/150x100/?python" },
-  { id: "4", title: "Node.js 백엔드 개발", category: "프로그래밍", thumbnail: "https://source.unsplash.com/150x100/?nodejs" },
-  { id: "5", title: "코틀린으로 안드로이드 앱 만들기", category: "프로그래밍", thumbnail: "https://source.unsplash.com/150x100/?kotlin" },
-  { id: "6", title: "자료구조와 알고리즘", category: "프로그래밍", thumbnail: "https://source.unsplash.com/150x100/?algorithm" },
+  {
+    id: "1",
+    title: "React Native 기초",
+    category: "프로그래밍",
+    thumbnail: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8JUVDJUJEJTk0JUVCJTk0JUE5fGVufDB8fDB8fHww",
+    enrolled: 5,
+    capacity: 8,
+    tutor: "김개발",
+    rating: 4.8,
+    reviewCount: 23,
+    liked: true, // 찜 여부 추가
+    ongoing: true, // 진행중인 과외 여부 추가
+  },
+  {
+    id: "2",
+    title: "JavaScript ES6+",
+    category: "프로그래밍",
+    thumbnail: "https://plus.unsplash.com/premium_photo-1661877737564-3dfd7282efcb?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    enrolled: 5,
+    capacity: 8,
+    tutor: "이자바",
+    rating: 4.6,
+    reviewCount: 17,
+    liked: false,
+    ongoing: false, // 진행중인 과외 여부 추가
+  },
+  { 
+    id: "3",
+    title: "Python 데이터 분석",
+    category: "프로그래밍",
+    thumbnail: "https://plus.unsplash.com/premium_photo-1720287601920-ee8c503af775?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    enrolled: 5,
+    capacity: 8,
+    tutor: "박파이썬",
+    rating: 4.9,
+    reviewCount: 30,
+    liked: true,
+    ongoing: false, // 진행중인 과외 여부 추가
+  },
+  { id: "4", title: "Node.js 백엔드 개발", category: "프로그래밍", thumbnail: "https://source.unsplash.com/150x100/?nodejs",enrolled: 5, capacity: 8 },
+  { id: "5", title: "코틀린으로 안드로이드 앱 만들기", category: "프로그래밍", thumbnail: "https://source.unsplash.com/150x100/?kotlin",enrolled: 5, capacity: 8 },
+  { id: "6", title: "자료구조와 알고리즘", category: "프로그래밍", thumbnail: "https://source.unsplash.com/150x100/?algorithm",enrolled: 5, capacity: 8 },
 
   // 음악
-  { id: "7", title: "피아노 입문", category: "음악", thumbnail: "https://source.unsplash.com/150x100/?piano" },
-  { id: "8", title: "통기타 코드 배우기", category: "음악", thumbnail: "https://source.unsplash.com/150x100/?guitar" },
-  { id: "9", title: "보컬 트레이닝 기초", category: "음악", thumbnail: "https://source.unsplash.com/150x100/?vocal" },
-  { id: "10", title: "작곡의 첫걸음", category: "음악", thumbnail: "https://source.unsplash.com/150x100/?music" },
+  { id: "7", title: "피아노 입문", category: "음악", thumbnail: "https://source.unsplash.com/150x100/?piano" ,enrolled: 5, capacity: 8},
+  { id: "8", title: "통기타 코드 배우기", category: "음악", thumbnail: "https://source.unsplash.com/150x100/?guitar",enrolled: 5, capacity: 8 },
+  { id: "9", title: "보컬 트레이닝 기초", category: "음악", thumbnail: "https://source.unsplash.com/150x100/?vocal" ,enrolled: 5, capacity: 8},
+  { 
+    id: "10",
+    title: "작곡의 첫걸음",
+    category: "음악",
+    thumbnail: "https://plus.unsplash.com/premium_vector-1713810634629-f8c839434609?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fCVFQyU5NSU4NSVFQiVCMyVCNHxlbnwwfHwwfHx8MA%3D%3D" ,
+    enrolled: 5, capacity: 8,tutor: "홍길동", rating: 4.5, reviewCount: 12, liked: true, ongoing: true
+  },
 
   // 운동
-  { id: "11", title: "헬스 PT", category: "운동", thumbnail: "https://source.unsplash.com/150x100/?fitness" },
-  { id: "12", title: "요가 & 필라테스", category: "운동", thumbnail: "https://source.unsplash.com/150x100/?yoga" },
-  { id: "13", title: "수영 영법 마스터", category: "운동", thumbnail: "https://source.unsplash.com/150x100/?swimming" },
-  { id: "14", title: "테니스 입문 클래스", category: "운동", thumbnail: "https://source.unsplash.com/150x100/?tennis" },
+  { id: "11", title: "헬스 PT", category: "운동", thumbnail: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308",enrolled: 5, capacity: 8 },
+  { id: "12", title: "요가 & 필라테스", category: "운동", thumbnail: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308",enrolled: 5, capacity: 8 },
+  { id: "13", title: "수영 영법 마스터", category: "운동", thumbnail: "https://source.unsplash.com/150x100/?swimming",enrolled: 5, capacity: 8 },
+  { id: "14", title: "테니스 입문 클래스", category: "운동", thumbnail: "https://source.unsplash.com/150x100/?tennis",enrolled: 5, capacity: 8 },
 
   // 금융
-  { id: "15", title: "주식 투자 전략", category: "금융", thumbnail: "https://source.unsplash.com/150x100/?stocks" },
-  { id: "16", title: "부동산 재테크", category: "금융", thumbnail: "https://source.unsplash.com/150x100/?realestate" },
-  { id: "17", title: "개인 자산 관리", category: "금융", thumbnail: "https://source.unsplash.com/150x100/?finance" },
+  { id: "15", title: "주식 투자 전략", category: "금융", thumbnail: "https://source.unsplash.com/150x100/?stocks",enrolled: 5, capacity: 8 },
+  { id: "16", title: "부동산 재테크", category: "금융", thumbnail: "https://source.unsplash.com/150x100/?realestate",enrolled: 5, capacity: 8 },
+  { id: "17", title: "개인 자산 관리", category: "금융", thumbnail: "https://source.unsplash.com/150x100/?finance",enrolled: 5, capacity: 8 },
 
   // 미술
-  { id: "18", title: "수채화 그리기", category: "미술", thumbnail: "https://source.unsplash.com/150x100/?watercolor" },
-  { id: "19", title: "아이패드 드로잉", category: "미술", thumbnail: "https://source.unsplash.com/150x100/?drawing" },
-  { id: "20", title: "인물 소묘 기초", category: "미술", thumbnail: "https://source.unsplash.com/150x100/?portrait" },
+  { id: "18", title: "수채화 그리기", category: "미술", thumbnail: "https://source.unsplash.com/150x100/?watercolor",enrolled: 5, capacity: 8 },
+  { id: "19", title: "아이패드 드로잉", category: "미술", thumbnail: "https://source.unsplash.com/150x100/?drawing",enrolled: 5, capacity: 8 },
+  { id: "20", title: "인물 소묘 기초", category: "미술", thumbnail: "https://source.unsplash.com/150x100/?portrait" ,enrolled: 5, capacity: 8},
 
   // 외국어
-  { id: "21", title: "비즈니스 영어 회화", category: "외국어", thumbnail: "https://source.unsplash.com/150x100/?english" },
-  { id: "22", title: "일본어 JLPT N3 대비", category: "외국어", thumbnail: "https://source.unsplash.com/150x100/?japanese" },
-  { id: "23", title: "왕초보 스페인어", category: "외국어", thumbnail: "https://source.unsplash.com/150x100/?spanish" },
-  { id: "24", title: "HSK 4급 합격반", category: "외국어", thumbnail: "https://source.unsplash.com/150x100/?chinese" },
+  { id: "21", title: "비즈니스 영어 회화", category: "외국어", thumbnail: "https://source.unsplash.com/150x100/?english",enrolled: 5, capacity: 8 },
+  { id: "22", title: "일본어 JLPT N3 대비", category: "외국어", thumbnail: "https://source.unsplash.com/150x100/?japanese",enrolled: 5, capacity: 8 },
+  { id: "23", title: "왕초보 스페인어", category: "외국어", thumbnail: "https://source.unsplash.com/150x100/?spanish",enrolled: 5, capacity: 8 },
+  { id: "24", title: "HSK 4급 합격반", category: "외국어", thumbnail: "https://source.unsplash.com/150x100/?chinese",enrolled: 5, capacity: 8 },
 
   // 디자인
-  { id: "25", title: "Figma UI/UX 디자인", category: "디자인", thumbnail: "https://source.unsplash.com/150x100/?figma" },
-  { id: "26", title: "포토샵 사진 보정", category: "디자인", thumbnail: "https://source.unsplash.com/150x100/?photoshop" },
-  { id: "27", title: "일러스트레이터 시작하기", category: "디자인", thumbnail: "https://source.unsplash.com/150x100/?illustrator" },
+  { id: "25", title: "Figma UI/UX 디자인", category: "디자인", thumbnail: "https://source.unsplash.com/150x100/?figma",enrolled: 5, capacity: 8 },
+  { id: "26", title: "포토샵 사진 보정", category: "디자인", thumbnail: "https://source.unsplash.com/150x100/?photoshop" ,enrolled: 5, capacity: 8},
+  { id: "27", title: "일러스트레이터 시작하기", category: "디자인", thumbnail: "https://source.unsplash.com/150x100/?illustrator",enrolled: 5, capacity: 8 },
 ];
 
 export default function HomeScreen({ navigation, route }) {
@@ -68,7 +111,6 @@ export default function HomeScreen({ navigation, route }) {
       style={styles.lessonCard}
       onPress={() => navigation.navigate("LessonDetail", { lesson: item })}
     >
-      {/* 썸네일 이미지 추가 */}
       <Image
         source={{ uri: item.thumbnail }}
         style={styles.lessonThumbnail}
@@ -76,17 +118,26 @@ export default function HomeScreen({ navigation, route }) {
       />
       <Text
         style={styles.lessonTitle}
-        numberOfLines={1} // 최대 2줄까지 표시
-        ellipsizeMode="tail" // 넘치면 ...으로 표시
+        numberOfLines={1}
+        ellipsizeMode="tail"
       >
         {item.title}
       </Text>
-      <Text style={styles.lessonCategory}>{item.category}</Text>
+      {/* 강사 이름 표시 */}
+      <Text style={styles.lessonTutor}>{item.tutor}</Text>
+      {/* <Text style={styles.lessonCategory}>{item.category}</Text> // 카테고리 보이면 지저분해 보여서 제거 */}
+      <Text style={styles.lessonCapacity}>
+        {`수강인원: ${item.enrolled} / ${item.capacity}`}
+      </Text>
+      {/* 평점 및 후기수 표시 */}
+      <Text style={styles.lessonRating}>
+        {`⭐ ${item.rating} (${item.reviewCount}개 후기)`}
+      </Text>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       {/* 섹션: 인기 과외 */}
       <Text style={styles.sectionTitle}>🔥 인기 과외</Text>
       <FlatList
@@ -95,28 +146,29 @@ export default function HomeScreen({ navigation, route }) {
         keyExtractor={(item) => item.id}
         renderItem={renderLesson}
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{paddingBottom: 10}}
       />
 
       {/* 섹션: 진행 중인 과외 */}
       <Text style={styles.sectionTitle}>📚 진행 중인 과외</Text>
       <FlatList
         horizontal
-        // 진행 중인 과외는 일부만 보여주도록 slice 활용
-        data={dummyLessons.slice(0, 5)}
+        data={dummyLessons.filter(item => item.ongoing)}
         keyExtractor={(item) => item.id}
         renderItem={renderLesson}
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{paddingBottom: 10}}
       />
 
       {/* 섹션: 찜한 과외 */}
       <Text style={styles.sectionTitle}>❤️ 찜한 과외</Text>
       <FlatList
         horizontal
-        // 찜한 과외는 다른 일부를 보여주도록 slice 활용
-        data={dummyLessons.slice(10, 15)}
+        data={dummyLessons.filter(item => item.liked)}
         keyExtractor={(item) => item.id}
         renderItem={renderLesson}
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{paddingBottom: 10}}
       />
 
       {/* 카테고리 메뉴 */}
@@ -125,7 +177,7 @@ export default function HomeScreen({ navigation, route }) {
         onClose={() => setMenuVisible(false)}
         navigation={navigation}
       />
-    </View>
+    </ScrollView>
   );
 }
 
@@ -138,22 +190,47 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   lessonCard: {
-    width: 150,
-    height: 140, // 높이 늘림
-    backgroundColor: "#f2f2f2",
+    width: 170,
+    height: 190,
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 10,
-    marginHorizontal: 10,
+    // marginHorizontal: 1, // 카드 간격 조정
+    marginLeft: 10, // ← 화면 왼쪽 여백 추가
     justifyContent: "flex-start",
-    alignItems: "center",
+    alignItems: "flex-start", // 왼쪽 정렬로 변경
+    // 필요하다면 그림자 효과 추가 가능
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.05,
+    // shadowRadius: 4,
+    // elevation: 2,
   },
   lessonThumbnail: {
-    width: 130,
-    height: 70,
-    borderRadius: 6,
+    width: 150,
+    height: 80,
+    borderRadius: 5, // 모서리
     marginBottom: 8,
     backgroundColor: "#ddd",
   },
-  lessonTitle: { fontSize: 16, fontWeight: "bold" },
+  lessonTitle: { fontSize: 16, fontWeight: "bold", alignSelf: "flex-start" },
+  lessonTutor: {
+    fontSize: 13,
+    color: "#333",
+    marginBottom: 2,
+    alignSelf: "flex-start", // 왼쪽 정렬
+  },
   lessonCategory: { fontSize: 14, color: "#555" },
+  lessonCapacity: {
+    fontSize: 13,
+    color: "#888",
+    marginTop: 2,
+    alignSelf: "flex-start", // 왼쪽 정렬
+  },
+  lessonRating: {
+    fontSize: 13,
+    color: "#f5a623",
+    marginTop: 2,
+    alignSelf: "flex-start", // 왼쪽 정렬
+  },
 });
