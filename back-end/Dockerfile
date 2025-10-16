@@ -20,6 +20,7 @@ WORKDIR /app
 
 # 의존성 파일 복사 및 설치
 COPY requirements.txt /app/
+
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # 프로젝트 파일 복사
