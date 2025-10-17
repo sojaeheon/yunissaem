@@ -8,11 +8,14 @@ Django==5.2.4
 django-allauth==64.0.0
 django-cors-headers==4.7.0
 djangorestframework==3.16.0
+gunicorn==23.0.0
 idna==3.10
 oauthlib==3.3.1
+packaging==25.0
 pycparser==2.22
 PyJWT==2.10.1
 requests==2.32.4
 sqlparse==0.5.3
+typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0
