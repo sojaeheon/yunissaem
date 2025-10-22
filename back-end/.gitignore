@@ -222,6 +222,7 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
+.env.*
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -286,4 +287,80 @@ buck-out/
 
 # End of https://www.toptal.com/developers/gitignore/api/java,reactnative,redis
 
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environment
+venv/
+ENV/
+env/
 .venv/
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+
+# If using Django's collectstatic
+/static/
+
+# dotenv environment variables
+.env
+.env.*
+
+# VSCode settings
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# PyCharm
+.idea/
+
+# Migrations (optional: sometimes people ignore them during early dev)
+**/migrations/*.py
+!**/migrations/__init__.py
+
+# Coverage reports
+htmlcov/
+.coverage
+.tox/
+.nox/
+.cache
+coverage.xml
+*.cover
+
+# Testing
+test-results/
+nosetests.xml
+junit.xml
+.xunit.xml
+.pytest_cache/
+
+# Pipenv
+Pipfile.lock
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Other
+*.swp
