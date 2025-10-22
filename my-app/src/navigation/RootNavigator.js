@@ -2,7 +2,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons"; // 아이콘 패키지
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 
 // Screens
 import LoginScreen from "../screens/LoginScreen";
@@ -46,21 +46,21 @@ function MainTabs() {
         component={HomeScreen}
         options={({ navigation }) => ({
           title: "홈",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Search")}
-              style={{ marginLeft: 15 }}
-            >
-              <Ionicons name="search" size={24} color="black" />
-            </TouchableOpacity>
-          ),
           headerRight: () => (
-            <TouchableOpacity
-              onPress={() => navigation.setParams({ openMenu: true })}
-              style={{ marginRight: 15 }}
-            >
-              <Ionicons name="menu" size={24} color="black" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Search")}
+                style={{ marginRight: 10 }}
+              >
+                <Ionicons name="search" size={24} color="black" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.setParams({ openMenu: true })}
+                style={{ marginRight: 15 }}
+              >
+                <Ionicons name="menu" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
           ),
         })}
       />
