@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-(y=m@buaq-2z73de1d$%(8-(x$3&bjujblmz-93$3@6u6x*4)e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # 또는 ['127.0.0.1', 'localhost', '192.168.x.y'] // 모든 호스트 허용
 
 
 # Application definition
@@ -35,12 +35,14 @@ INSTALLED_APPS = [
     'accounts',
     'courses',
     'chattings',
+    'main',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders', # CORS 설정을 위한 앱
 ]
 
 MIDDLEWARE = [
@@ -51,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # CORS 설정을 위한 미들웨어
 ]
 
 ROOT_URLCONF = 'yunissaem_api.urls'
@@ -124,3 +127,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 개발용 편의 설정 (보안상 운영환경에선 사용 금지)
+CORS_ALLOW_ALL_ORIGINS = True

@@ -1,4 +1,4 @@
-# users/views.py
+# main/views.py
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -12,6 +12,8 @@ from courses.selector import get_new_courses, get_popular_courses
 # 추후 permission_classes도 수정
 @api_view(['GET'])
 def home_view(request):
+    
+
     """
     임시 테스트용 API: 로그인 기능 구현 전, ID가 1인 유저가 로그인한 것처럼 가정
     """
@@ -30,10 +32,10 @@ def home_view(request):
     
     # 인기, 신규, 찜, 수강중 과외 
     courses = {
-        'popular_courses': get_popular_courses(),
-        'new_courses': get_new_courses(60), # 최신 기준일 지정
-        'my_wishlist': get_wishlist_courses(user),
-        'my_attending_courses': get_attending_courses(user),
+        'popular_courses': get_popular_courses(limit=10), # 인기 과외 10개
+        'new_courses': get_new_courses(days=60, limit=10), # 신규 과외 10개 # 최신 기준일 지정(60일로 테스트)
+        'my_wishlist': get_wishlist_courses(user, limit=10), # 찜한 과외 10개
+        'my_attending_courses': get_attending_courses(user, limit=10), # 수강중 과외 10개
     }
 
     response_data = {key: CourseListSerializer(value, many=True).data for key, value in courses.items()}
