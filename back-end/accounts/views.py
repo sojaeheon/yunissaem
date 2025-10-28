@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from courses.serializers import CourseListSerializer
-from accounts.models import Account # User 모델 임포트
+from accounts.models import User # User 모델 임포트
 
 # 내가 찜한 과외 및 내가 수강중인 과외 목록 (로그인 기능 없을 때 테스트용)
 # 추후 permission_classes도 수정
@@ -18,15 +18,15 @@ def my_data_view(request):
     # ※※※실제 배포 시에는 이 코드를 반드시 삭제※※※
     try:
         # ID가 1인 유저를 'testuser'라고 가정
-        user = Account.objects.get(id=1)
-    except Account.DoesNotExist:
+        user = User.objects.get(id=1)
+    except User.DoesNotExist:
         return Response({"error": "테스트용 유저(id=1)가 DB에 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
     # request.user에 강제로 할당하여 마치 로그인된 것처럼 만듭니다.
     request.user = user
     # --- 임시 코드 끝 ---
 
-    # request.user가 실제 Account 객체이므로 is_authenticated는 항상 True입니다.
+    # request.user가 실제 User 객체이므로 is_authenticated는 항상 True입니다.
     wishlist_qs = request.user.wished_courses.all().order_by('-created_at')[:10]
     attending_qs = request.user.attending_courses.all().order_by('-created_at')[:10]
 

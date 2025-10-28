@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Course, Category
-from accounts.models import Account
+from accounts.models import User
 
 class CourseListSerializer(serializers.ModelSerializer):
     # models 내부에 property 정의 시 아래와 같이 사용
