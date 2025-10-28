@@ -2,22 +2,41 @@ from rest_framework import serializers
 from .models import Course, Category
 from accounts.models import Account
 
+
+
+# =========================================================
+# ✅ 카테고리 Serializer
+# =========================================================
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+        
+
+# =========================================================
+# ✅ 과외 목록용 Serializer (리스트 페이지)
+# =========================================================
 class CourseListSerializer(serializers.ModelSerializer):
-    # models 내부에 property 정의 시 아래와 같이 사용
-    current_tutees_count = serializers.ReadOnlyField()
-    # course.tutor 객체로부터 tutor의 username을 불러옴
-    tutor_name = serializers.StringRelatedField(source='tutor')
+    tutor_name = serializers.CharField(source='tutor.name', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    thumbnail_url = serializers.ReadOnlyField()
+    remaining_slots = serializers.ReadOnlyField()
 
     class Meta:
         model = Course
-        fields = ('id', # 클릭 시 접속을 위함
-                  'title', # 과외명
-                  'thumbnail_image_url', # 썸네일 이미지
-                  'price', # 가격
-                  'max_tutees', # 최대 수강생 인원
-                  'status', # 현재 상태
-                  'view_count', # 조회수
-                  'introduction', # 과외 소개
-                  'current_tutees_count', # 현재 수강생 인원
-                  'tutor_name', # tutor 이름
-                  ) 
+        fields = [
+            'id',
+            'title',
+            'thumbnail_url',
+            'tutor_name',
+            'category_name',
+            'max_students',
+            'current_students',
+            'remaining_slots',
+            'wishlist_count',
+            'review_count',
+            'average_rating',
+            'popularity_score',
+            'is_active',
+            'created_at',
+        ]
