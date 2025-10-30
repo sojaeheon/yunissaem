@@ -1,26 +1,26 @@
 # reviews/models.py
 from django.db import models
-from django.conf import settings
-from django.core.validators import MinValueValidator, MaxValueValidator
-from courses.models import AttendingCourses # 수강 등록(inProgress) 모델을 임포트
 
 class Review(models.Model):
 
+    '''
+    enrollment: enrollment 정보 - course_id, user_id 모두 포함함
+    rating: 평점(0.5~5.0)
+    comment: 리뷰 내용      
+    '''
+
     RATING_CHOICES = [(round(i * 0.5, 1), f'{round(i * 0.5, 1)}점') for i in range(1, 11)]
 
-    # ERD에 따라 '수강 등록(inProgress)' 정보와 연결합니다.
+    # ERD에 따라 '수강 등록(enrollment)' 정보와 연결함 - User, Course 정보를 모두 포함할 수 있음
     # 이렇게 하면 수강한 사람만 리뷰를 남길 수 있으며, User 및 course 정보에 직접적으로 연결할 수 있음
     enrollment = models.ForeignKey(
-        AttendingCourses, 
+        'courses.Enrollment',
         on_delete=models.CASCADE, 
         related_name='reviews'
     )
-    
-    # 리뷰를 작성한 유저 (ERD에는 없지만, 편의를 위해 추가할 수 있습니다)
-    # user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    # ERD의 'rating' 필드. 'choices' 옵션을 적용합니다.
-    # FloatField 대신 DecimalField를 사용하면 부동소수점 오류를 방지해 더 정확합니다.
+    # ERD의 'rating' 필드. 'choices' 옵션을 적용 - 별점은 0.5부터 5.0까지 가질 수 있음
+    # FloatField 대신 DecimalField를 사용하면 부동소수점 오류를 방지해 더 정확함
     rating = models.DecimalField(
         max_digits=2,      # 5.0 (숫자 2개)
         decimal_places=1,  # 소수점 1자리
@@ -36,3 +36,6 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.enrollment.user.username} - {self.enrollment.course.title} ({self.rating})"
+
+    # '수강 완료' 상태에서 남긴 Review만 유효하도록 설정할 수 있지만, Front에서도 수정할 수 있는 기능인 것 같아 남겨둡니다.
+    # 필요할 시 백엔드 작업으로 옮기겠습니다.

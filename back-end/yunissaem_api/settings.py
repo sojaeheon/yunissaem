@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'accounts',
     'courses',
     'chattings',
+    'reviews',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
