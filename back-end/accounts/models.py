@@ -29,6 +29,6 @@ last_login: 마지막 로그인 시간
 class User(AbstractUser):
     name=models.CharField(max_length=10, null=False)    # 사용자 본명
     phone=PhoneNumberField(verbose_name='휴대폰 번호', blank=True, null=True, region='KR')  # 사용자 전화번호
-    bio=models.CharField(max_length=50)
+    bio=models.CharField(max_length=50, blank=True)
     profile_image=models.URLField(blank=True)
     created_at=models.DateTimeField(auto_now_add=True)

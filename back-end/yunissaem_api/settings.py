@@ -129,5 +129,10 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# ACCOUNT에 전화번호 사용을 위함
 PHONENUMBER_DEFAULT_FORMAT = 'NATIONAL'
 PHONENUMBER_DB_FORMAT = 'NATIONAL'
+
+# accounts 정의
+AUTH_USER_MODEL = 'accounts.User'
