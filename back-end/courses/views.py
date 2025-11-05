@@ -22,3 +22,8 @@ def new_view(request):
     new_courses = Course.objects.filter(created_at__gte=time_threshold).order_by('-created_at')[:10]
     serializer = CourseListSerializer(new_courses, many=True)
     return Response(serializer.data)
+
+@api_view(['POST'])
+def create_course(request):
+    # serializer = 
+    return

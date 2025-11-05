@@ -20,4 +20,28 @@ class CourseListSerializer(serializers.ModelSerializer):
                   'introduction', # 과외 소개
                   'current_tutees_count', # 현재 수강생 인원
                   'tutor_name', # tutor 이름
-                  ) 
+                  )
+
+# 과외 생성을 위한 Serializer
+class CourseCreateSerializer(serializers.ModelSerializer):
+    """
+    과외 생성 시 사용되는 Serializer
+    """
+    class Meta:
+        model = Course
+        fields = [
+            'id',               # 생성된 과외의 고유 ID
+            'title',            # 과외 제목
+            'description',      # 과외 소개글
+            'curriculum',       # 수업 커리큘럼(텍스트)
+            'thumbnail',        # 썸네일 이미지(ImageField)
+            'category',         # 카테고리 외래키
+            'max_students',     # 최대 수강 가능 인원
+            'status'            # 과외 상태
+        ]
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['tutor'] = user
+        course = Course.objects.create(**validated_data)
+        return course
