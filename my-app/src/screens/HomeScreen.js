@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import axios from "axios";
 import CategoryMenu from "../screens/CategoryMenu";
+import { BASE_URL, SERVER_BASE } from "../config/config";  // import 추가
 
 /*
   HomeScreen 전체 설명 (요약)
@@ -49,15 +50,6 @@ export default function HomeScreen({ navigation, route }) {
       navigation.setParams({ openMenu: false });
     }
   }, [route?.params?.openMenu]);
-
-  // ---------------------------
-  // 백엔드 주소 (개발용 하드코딩)
-  // ---------------------------
-  // 실제 디바이스 테스트 시 PC의 IPv4 주소로 설정하세요 (ipconfig로 확인)
-
-  const PC_IP = "192.168.9.92";
-  const BASE_URL = `http://${PC_IP}:8000/api`; // API 엔드포인트 기본
-  const SERVER_BASE = `http://${PC_IP}:8000`;   // 이미지 등 상대경로 보정용
 
   // ----------------------------------------------------
   // 응답 정규화 함수: 배열 | {results: [...]} 두가지 형태 모두 처리

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-(y=m@buaq-2z73de1d$%(8-(x$3&bjujblmz-93$3@6u6x*4)e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']  # 또는 ['127.0.0.1', 'localhost', '192.168.x.y'] // 모든 호스트 허용
 
 
 # Application definition
@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'courses',
     'chattings',
     'reviews',
+    'main',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -136,3 +137,5 @@ PHONENUMBER_DB_FORMAT = 'NATIONAL'
 
 # accounts 정의
 AUTH_USER_MODEL = 'accounts.User'
+# 개발용 편의 설정 (보안상 운영환경에선 사용 금지)
+CORS_ALLOW_ALL_ORIGINS = True
