@@ -35,7 +35,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     tutor = TutorSerializer(read_only=True)
     reviews = serializers.SerializerMethodField()
     is_owner = serializers.SerializerMethodField()
-    is_liked = serializers.SerializerMethodField()
+    is_wished = serializers.SerializerMethodField()
     enrollment_status = serializers.SerializerMethodField()
 
     class Meta:
@@ -51,7 +51,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             'tutor',
             'average_rating',
             'reviews',
-            'is_liked',
+            'is_wished',
             'is_owner', 
             'enrollment_status',
             'view_count',
@@ -66,7 +66,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         return serializer.data
 
     # 찜 여부
-    def get_is_liked(self, obj):
+    def get_is_wished(self, obj):
         user = self.context['request'].user
         if not user.is_authenticated:
             return False
