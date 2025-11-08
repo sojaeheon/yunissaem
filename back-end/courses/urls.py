@@ -1,7 +1,6 @@
-from django.urls import path, include
-from .views import popular_view, new_view
+from django.urls import path
+from .views import CourseDetailView
 
 urlpatterns = [
-    path('popular/', popular_view),
-    path('new/', new_view)
+    path('<int:course_id>/', CourseDetailView.as_view(), name='course-detail'),
 ]
