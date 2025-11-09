@@ -74,3 +74,49 @@ class CourseWishToggleView(APIView):
              "is_wished": is_wished,},
             status=status.HTTP_200_OK
         )
+    
+class CourseStatusUpdateView(APIView):
+    """
+    과외 상태 변경 API
+    - 과외 상태 업데이트
+    - 튜터 본인만 가능
+    - 종료 시 수강생이 없어야 함
+    """
+
+    def patch(self, request, course_id):
+        # --- 임시 로그인 (User id=739) ---
+        # course_id 1 -> tutor id 739
+        try:
+            user = User.objects.get(id=739)
+        except User.DoesNotExist:
+            return Response({"error": "테스트용 유저(id=739)가 없습니다."},
+                            status=status.HTTP_404_NOT_FOUND)
+        request.user = user
+        # --- 임시 코드 끝 ---
+
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({"error": "해당 과외가 존재하지 않습니다."},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != course.tutor:
+            return Response({"error": "상태 변경 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+        new_status = request.data.get("status")
+        valid_status = [choice[0] for choice in Course.StatusChoices.choices]
+
+        if new_status not in valid_status:
+            return Response({"error": "유효하지 않은 상태값입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 종료 상태로 변경하려면 수강생이 없어야 함
+        if new_status == Course.StatusChoices.FINISHED and course.tutees.exists():
+            return Response({"error": "수강 중인 튜티가 있어 종료할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        course.status = new_status
+        course.save(update_fields=["status"])
+
+        return Response({
+            "message": f"과외 상태가 '{new_status}'로 변경되었습니다.",
+            "status": course.status
+        }, status=status.HTTP_200_OK)
