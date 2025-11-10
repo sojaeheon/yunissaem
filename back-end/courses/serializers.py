@@ -53,6 +53,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             'reviews',
             'is_wished',
             'is_owner', 
+            'status',
             'enrollment_status',
             'view_count',
             'thumbnail_image_url',

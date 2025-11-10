@@ -7,21 +7,27 @@ from accounts.models import User
 
 class CourseDetailView(APIView):
     """
-    과외 상세 조회 API (APIView 버전)
-    - 과외 상세 정보 반환
-    - 조회수(view_count) 증가
+    GET : 과외 상세 조회
+    PATCH : 과외 수정
     """
 
+    
+
     def get(self, request, course_id):
-        # --- 테스트용 로그인 가정 코드 ---
+        """
+        과외 상세 조회 API
+        - 과외 상세 정보 반환
+        - 조회수(view_count) 증가
+        """
+        # --- 임시 로그인 코드 ---
         try:
             user = User.objects.get(id=1)
         except User.DoesNotExist:
-            return Response({"error": "테스트용 유저(id=1)가 DB에 없습니다."},
+            return Response({"error": "테스트용 유저(id=1)가 없습니다."},
                             status=status.HTTP_404_NOT_FOUND)
         request.user = user
         # --- 임시 코드 끝 ---
-
+        
         # 과외 조회
         try:
             course = Course.objects.get(id=course_id)
@@ -36,6 +42,47 @@ class CourseDetailView(APIView):
         # 직렬화 후 응답
         serializer = CourseDetailSerializer(course, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def patch(self, request, course_id):
+        """
+        과외 수정 (튜터만 가능)
+        """
+        # --- 임시 로그인 (User id=739) ---
+        # course_id 1 -> tutor id 739
+        try:
+            user = User.objects.get(id=739)
+        except User.DoesNotExist:
+            return Response({"error": "테스트용 유저(id=739)가 없습니다."},
+                            status=status.HTTP_404_NOT_FOUND)
+        request.user = user
+        # --- 임시 코드 끝 ---
+        
+        # 과외 조회
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({"error": "해당 과외가 존재하지 않습니다."},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        # 튜터 본인만 수정 가능
+        if request.user != course.tutor:
+            return Response({"error": "수정 권한이 없습니다."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        # partial=True → 수정할 항목만 받아도 됨
+        serializer = CourseDetailSerializer(
+            course, data=request.data, partial=True, context={'request': request}
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "과외 정보가 성공적으로 수정되었습니다.",
+                 "course": serializer.data},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CourseWishToggleView(APIView):
     """
