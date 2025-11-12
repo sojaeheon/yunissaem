@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'accounts',
     'courses',
     'chattings',
+    'reviews',
     'main',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,7 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders', # CORS 설정을 위한 앱
+    'corsheaders',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [
@@ -128,5 +130,12 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# ACCOUNT에 전화번호 사용을 위함
+PHONENUMBER_DEFAULT_FORMAT = 'NATIONAL'
+PHONENUMBER_DB_FORMAT = 'NATIONAL'
+
+# accounts 정의
+AUTH_USER_MODEL = 'accounts.User'
 # 개발용 편의 설정 (보안상 운영환경에선 사용 금지)
 CORS_ALLOW_ALL_ORIGINS = True
