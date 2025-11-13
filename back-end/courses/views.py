@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Course, WishedCourses, Category
@@ -31,7 +32,7 @@ def course_list_by_category(request, category_id):
     sort = request.GET.get('sort', 'latest')
 
     # 🔹 해당 카테고리의 활성화된 과외만 조회
-    courses = Course.objects.filter(category=category, is_active=True)
+    courses = Course.objects.filter(category=category)
 
     # ✅ 정렬 조건 분기
     if sort == 'popular':
