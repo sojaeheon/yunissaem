@@ -364,3 +364,5 @@ dmypy.json
 
 # Other
 *.swp
+
+__pycache__/

@@ -26,7 +26,7 @@ def home_view(request):
 
     # request.user에 강제로 할당하여 마치 로그인된 것처럼 만듭니다.
     request.user = user
-    # --- 임시 코드 끝 ---
+    # --- 테스트용 임시 코드 끝 ---
 
     # request.user가 실제 User 객체이므로 is_authenticated는 항상 True입니다.
     wishlist_qs = request.user.wished_courses.all().order_by('-created_at')[:10]
