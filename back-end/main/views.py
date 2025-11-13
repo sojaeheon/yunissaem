@@ -30,6 +30,7 @@ def home_view(request):
     request.user = user
     # --- 임시 코드 끝 ---
     
+
     # 인기, 신규, 찜, 수강중 과외 
     courses = {
         'popular_courses': get_popular_courses(limit=10), # 인기 과외 10개
