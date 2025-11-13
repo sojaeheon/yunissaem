@@ -1,14 +1,27 @@
 /*
   CategoryLessonScreen 전체 설명 (요약)
-  - 특정 카테고리(또는 "전체")에 속한 과외 목록을 조회하고 표시하는 화면입니다.
-  - ⚠️ 현재는 서버에서 인기 과외(/courses/popular/) 데이터를 불러오며,
-    추후에는 선택된 카테고리 ID에 따라 /courses/category/{category_id}/ 형태의 API로 확장 예정입니다.
-  - 정렬 옵션(인기순, 최신순, 리뷰 많은 순), 찜(좋아요) 토글, 신청 불가 과외 표시 토글 등의
-    필터링 기능을 제공합니다.
-  - 찜(좋아요)은 로컬 상태로만 관리되며, 서버 연동은 아직 구현되지 않았습니다.
-  - 화면 내 상태를 모두 초기화하는 "맨 처음 상태 복귀(resetToPristine)" 기능이 있으며,
-    뒤로가기(헤더·하드웨어) 시 동작이 아래와 같이 정의됩니다:
-      ① 현재 상태가 변경되어 있으면 → 초기화만 수행
+  [주요 기능 요약]
+  - 특정 카테고리(또는 "전체")에 속한 과외 목록을 서버에서 조회해 표시합니다.
+
+  - 카테고리별 조회 시: /courses/category/{category_id}/
+
+  - 전체 보기 시: /my/home/ → popular_courses 데이터를 사용합니다.
+
+  - 위 내용들은 카테고리 api가 생성되면 교체 예정
+
+  [지원 기능]
+  - 정렬 옵션: 최신순 / 인기순 / 리뷰 많은 순
+
+  - 찜(좋아요) 토글 기능
+
+  - 신청 불가 항목 보기: 정원 초과 시 자동 비활성화 처리
+
+  - 검색 기능: 제목 기준 실시간 필터링
+
+  - 카테고리 메뉴(CategoryMenu) 슬라이드 Drawer를 통해 다른 카테고리로 이동 가능
+
+  - 뒤로가기(헤더 및 하드웨어) 시 동작:
+      ① 현재 상태가 변경되어 있으면 → 화면 초기화만 수행
       ② 이미 초기 상태라면 → 이전 화면으로 이동
 */
 
@@ -46,7 +59,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
 
   // UI 상태 관리
   const [showUnavailable, setShowUnavailable] = useState(false); // 신청 불가 항목 보기 여부
-  const [sortOption, setSortOption] = useState("인기순"); // 현재 정렬 기준
+  const [sortOption, setSortOption] = useState("최신순"); // 현재 정렬 기준
   const [dropdownVisible, setDropdownVisible] = useState(false); // 정렬 옵션 드롭다운 표시 여부
   const [favoriteIds, setFavoriteIds] = useState([]); // 사용자가 찜한 강의 ID 목록
   const [menuVisible, setMenuVisible] = useState(false); // 카테고리 메뉴 표시 여부
@@ -75,17 +88,36 @@ export default function CategoryLessonScreen({ navigation, route }) {
     const fetchLessons = async () => {
       setLoading(true);
       try {
-        // 카테고리별 API 엔드포인트 선택
-        let endpoint = `${BASE_URL}/courses/popular/`;
+        let endpoint;
+
+        // 정렬 파라미터 설정
+        let sortParam = "";
+        if (sortOption === "인기순") sortParam = "?sort=popular";
+        else if (sortOption === "리뷰 많은 순") sortParam = "?sort=review";
+        else sortParam = ""; // 최신순 → 쿼리 없음
+
+        // 카테고리 지정된 경우
         if (category !== "전체" && categoryId) {
-          endpoint = `${BASE_URL}/courses/category/${categoryId}/`;
+          endpoint = `${BASE_URL}/courses/category/${categoryId}/${sortParam}`;
+        }
+        // 전체(기본값)일 경우 → /my/home/에서 인기 강의만 뽑기
+        else {
+          endpoint = `${BASE_URL}/my/home/`;
         }
 
         const res = await axios.get(endpoint);
-        const data = Array.isArray(res.data)
-          ? res.data
-          : res.data.results ?? [];
+        let data = [];
 
+        // category별 API가 없으면 /my/home/의 popular_courses 사용
+        if (category === "전체" || !categoryId) {
+          data = res.data.popular_courses ?? [];
+        } else {
+          // category API 응답이 리스트 형식이라면 바로 사용
+          data = Array.isArray(res.data)
+            ? res.data
+            : res.data.results ?? [];
+        }
+        
         // 서버 응답 데이터 정규화
         const normalized = data.map((item) => {
           const enrolled = item.current_tutees_count ?? item.view_count ?? 0;
@@ -119,7 +151,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
     };
 
     fetchLessons();
-  }, [category, categoryId]);
+  }, [category, categoryId, sortOption]);
 
   // -----------------------------------------------------------
   // 화면 초기화: “맨 처음 상태”로 되돌리기
@@ -130,7 +162,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
     setSearchFocused(false);
     setDropdownVisible(false);
     setShowUnavailable(false);
-    setSortOption("인기순");
+    setSortOption("최신순");
     Keyboard.dismiss();
     Toast.hide();
   };
@@ -142,7 +174,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
     !searchFocused &&
     !dropdownVisible &&
     showUnavailable === false &&
-    sortOption === "인기순";
+    sortOption === "최신순";
 
   // -----------------------------------------------------------
   // Toast 표시 및 키보드 이벤트 처리
@@ -264,14 +296,26 @@ export default function CategoryLessonScreen({ navigation, route }) {
   // -----------------------------------------------------------
   // 찜(좋아요) 토글 기능
   // -----------------------------------------------------------
-  const toggleFavorite = (id) => {
-    setFavoriteIds((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    );
+  const toggleFavorite = async (id) => {
+    try {
+      const res = await axios.post(`${BASE_URL}/courses/${id}/wish/`);
+      const isLiked = res.data.is_wished;
+
+      setFavoriteIds((prev) =>
+        isLiked ? [...prev, id] : prev.filter((f) => f !== id)
+      );
+
+      // 사용자 피드백
+      Alert.alert("알림", res.data.message || (isLiked ? "찜 추가" : "찜 해제"));
+    } catch (err) {
+      console.error("❌ 찜 토글 실패:", err.response?.data || err);
+      Alert.alert("오류", "찜 기능 실행 중 문제가 발생했습니다.");
+    }
   };
 
+
   // -----------------------------------------------------------
-  // 정렬 및 필터링 처리
+  // 필터링 처리 (정렬은 서버에서)
   // -----------------------------------------------------------
   let filteredLessons = lessons.filter(
     (l) =>
@@ -280,13 +324,17 @@ export default function CategoryLessonScreen({ navigation, route }) {
       (searchTerm === "" || l.title.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  if (sortOption === "인기순") {
-    filteredLessons.sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0));
-  } else if (sortOption === "최신순") {
-    filteredLessons.sort(
-      (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
-    );
-  }
+  // if (sortOption === "최신순") {
+  //   filteredLessons.sort(
+  //     (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+  //   );
+  // } else if (sortOption === "인기순") {
+  //   filteredLessons.sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0));
+  // } else if (sortOption === "리뷰 많은 순") {
+  //   filteredLessons.sort(
+  //     (a, b) => (b.review_count ?? 0) - (a.review_count ?? 0)
+  //   );
+  // }
 
   // -----------------------------------------------------------
   // 렌더링
@@ -425,7 +473,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
                         <Text style={styles.capacity}>
                           {item.enrolled}/{item.capacity}
                         </Text>
-                        <Text style={styles.rating}>★ {item.rating ?? "-"}</Text>
+                        <Text style={styles.rating}>★ {item.average_rating ?? "-"}</Text>
                       </View>
                       {item.available && (
                         <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
@@ -457,6 +505,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
     </SafeAreaView>
   );
 }
+
 
 // -----------------------------------------------------------
 // 스타일 정의
