@@ -324,18 +324,6 @@ export default function CategoryLessonScreen({ navigation, route }) {
       (searchTerm === "" || l.title.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // if (sortOption === "최신순") {
-  //   filteredLessons.sort(
-  //     (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
-  //   );
-  // } else if (sortOption === "인기순") {
-  //   filteredLessons.sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0));
-  // } else if (sortOption === "리뷰 많은 순") {
-  //   filteredLessons.sort(
-  //     (a, b) => (b.review_count ?? 0) - (a.review_count ?? 0)
-  //   );
-  // }
-
   // -----------------------------------------------------------
   // 렌더링
   // -----------------------------------------------------------
