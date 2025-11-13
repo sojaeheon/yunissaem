@@ -1,3 +1,20 @@
+/*
+  HomeScreen 전체 설명 (요약)
+  - 하나의 엔드포인트(/home/)를 호출해 인기 강의(popular_courses), 최신 강의(new_courses),
+    찜한 강의(my_wishlist), 진행 중인 강의(my_attending_courses)를 한 번에 가져옵니다.
+
+  - 서버 응답은 각 목록을 키별 배열 형태로 반환하며, normalizeResponse 함수를 통해
+    DRF의 페이징(results) 여부나 상대경로 썸네일(/media/...) 등을 일관된 구조로 변환합니다.
+
+  - 현재는 백엔드에서 ID=1 유저를 임시 로그인 상태로 가정하므로 토큰 없이 호출 가능합니다.
+    추후 실제 로그인 기능이 구현되면 Authorization 헤더에 토큰을 추가해야 합니다.
+
+  - 각 강의 섹션(인기, 최신, 찜, 진행중)은 SectionList를 이용해 구분 표시하며,
+    내부에서는 FlatList를 사용해 가로 스크롤 형태로 렌더링됩니다.
+    
+  - 주의: BASE_URL/SERVER_BASE는 개발 환경용 상수이며, 배포 시에는 환경 변수로 분리해야 합니다.
+*/
+
 import React, { useEffect, useState } from "react";
 import {
     View,
@@ -8,25 +25,13 @@ import {
     Image,
     ActivityIndicator,
     Alert,
-    SectionList, // 추가
+    SectionList,
 } from "react-native";
 import axios from "axios";
 import CategoryMenu from "../screens/CategoryMenu";
-import { BASE_URL, SERVER_BASE } from "../config/config";  // import 추가
+import { BASE_URL, SERVER_BASE } from "../config/config";
+import { useFocusEffect } from "@react-navigation/native";
 
-/*
-  HomeScreen 전체 설명 (요약)
-  - 인기 강의(/courses/popular/), 최신 강의(/courses/new/)를 각각 호출해
-    가로 스크롤 FlatList로 렌더링합니다.
-  - 추가로 accounts/data/ 엔드포인트를 호출해 '내 찜 목록'과 '내 수강 목록'을 가져옵니다.
-    - 현재 백엔드가 개발용으로 id=1 더미 유저를 직접 조회하는 구조면 클라이언트는
-      토큰 없이 호출해도 응답을 받습니다.
-    - 운영 환경에서는 토큰(또는 세션 쿠키)을 사용해 서버가 request.user를 식별해야 합니다.
-      아래 코드에서는 "토큰이 있으면 Authorization 헤더에 추가, 없으면 헤더 없이 요청" 방식으로 안전하게 처리합니다.
-  - normalizeResponse: DRF의 페이징(results) 또는 단순 배열 응답 모두 처리, 썸네일이
-    상대경로('/media/...')로 올 경우 SERVER_BASE를 붙여 절대 URL로 보정합니다.
-  - 주의: BASE_URL/SERVER_BASE는 개발 환경용 하드코딩입니다. 배포 전에는 환경변수로 분리하세요.
-*/
 
 export default function HomeScreen({ navigation, route }) {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -91,70 +96,40 @@ export default function HomeScreen({ navigation, route }) {
     });
   };
 
-  // ---------------------------
-  // 인기 강의 호출
-  // ---------------------------
-  useEffect(() => {
-    const fetchPopular = async () => {
+  const fetchAllHomeData = async () => {
       setLoadingPopular(true);
-      try {
-        const res = await axios.get(`${BASE_URL}/courses/popular/`);
-        // normalizeResponse로 DRF 페이징/배열 모두 처리
-        setPopularCourses(normalizeResponse(res.data));
-      } catch (err) {
-        // 개발 중엔 콘솔로 에러 확인하고 사용자에게 간단히 알림
-        console.error("fetchPopular error:", err);
-        Alert.alert("인기 강의 로드 실패", "서버에 연결할 수 없습니다.");
-      } finally {
-        setLoadingPopular(false);
-      }
-    };
-    fetchPopular();
-  }, []);
-
-  // ---------------------------
-  // 최신 강의 호출
-  // ---------------------------
-  useEffect(() => {
-    const fetchNew = async () => {
       setLoadingNew(true);
-      try {
-        const res = await axios.get(`${BASE_URL}/courses/new/`);
-        setNewCourses(normalizeResponse(res.data));
-      } catch (err) {
-        console.error("fetchNew error:", err);
-        Alert.alert("최신 강의 로드 실패", "서버에 연결할 수 없습니다.");
-      } finally {
-        setLoadingNew(false);
-      }
-    };
-    fetchNew();
-  }, []);
-
-  // ---------------------------------------
-  // 내 찜/수강 데이터 호출 (accounts/data/)
-  // - 현재 백엔드가 개발용으로 id=1 더미를 조회하면 토큰 없이도 응답을 줍니다.
-  // - 운영 환경에서는 로그인 후 저장한 토큰을 Authorization 헤더로 전송해야 합니다.
-  // - 이 코드: "토큰이 있으면 헤더 추가, 없으면 헤더 없이 요청" 형태로 유연하게 처리합니다.
-  // ---------------------------------------
-  useEffect(() => {
-    const fetchMyData = async () => {
       setLoadingMyData(true);
       try {
-        // 토큰 없이 호출: 토큰 전송 제거
-        const res = await axios.get(`${BASE_URL}/my/data/`);
+        const res = await axios.get(`${BASE_URL}/home/`);
+        const data = res.data;
 
-        // 안전하게 응답을 정규화해서 상태에 반영
-        setWishlist(normalizeResponse(res.data?.my_wishlist ?? []));
-        setAttending(normalizeResponse(res.data?.my_attending_courses ?? []));
+        setPopularCourses(normalizeResponse(data.popular_courses));
+        setNewCourses(normalizeResponse(data.new_courses));
+        setWishlist(normalizeResponse(data.my_wishlist));
+        setAttending(normalizeResponse(data.my_attending_courses));
       } catch (err) {
-        console.error("fetchMyData error:", err);
+        console.error("fetchAllHomeData error:", err);
+        Alert.alert("홈 데이터 로드 실패", "서버에 연결할 수 없습니다.");
       } finally {
+        setLoadingPopular(false);
+        setLoadingNew(false);
         setLoadingMyData(false);
       }
     };
-    fetchMyData();
+
+  // 첫 화면 로드 및 데이터 호출 함수
+  useEffect(() => {
+    fetchAllHomeData();
   }, []);
+
+  
+  // 그 후 화면이 포커스될 때마다 데이터 새로고침
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchAllHomeData();
+    }, [])
+  );
 
   // ----------------------------------------------------
   // 렌더러: 강의 카드 UI를 재사용 (수강 인원 / 정원 표시 추가)
@@ -176,7 +151,7 @@ export default function HomeScreen({ navigation, route }) {
     return (
       <TouchableOpacity
         style={styles.lessonCard}
-        onPress={() => navigation.navigate("LessonDetail", { course: item, courseId: item.id ?? item.pk })}
+        onPress={() => navigation.navigate("LessonDetail", { lesson: item, lessonId: item.id ?? item.pk })}
       >
         {item.thumbnail ? (
           <Image source={{ uri: item.thumbnail }} style={styles.lessonThumbnail} />
