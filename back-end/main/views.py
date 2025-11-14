@@ -12,7 +12,6 @@ from courses.selector import get_new_courses, get_popular_courses
 # 추후 permission_classes도 수정
 @api_view(['GET'])
 def home_view(request):
-    
 
     """
     임시 테스트용 API: 로그인 기능 구현 전, ID가 1인 유저가 로그인한 것처럼 가정

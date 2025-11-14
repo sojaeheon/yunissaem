@@ -4,24 +4,31 @@ from accounts.models import User
 from reviews.serializers import ReviewSerializer
 
 class CourseListSerializer(serializers.ModelSerializer):
-    # models 내부에 property 정의 시 아래와 같이 사용
-    current_tutees_count = serializers.ReadOnlyField()
-    # course.tutor 객체로부터 tutor의 username을 불러옴
-    tutor_name = serializers.StringRelatedField(source='tutor')
+    """
+    카테고리별 과외 목록 조회용 Serializer
+    """
+    # tutor의 username 불러오기
+    tutor_name = serializers.CharField(source='tutor.username', read_only=True)
+
+    # category 이름 불러오기
+    category_name = serializers.CharField(source='category.name', read_only=True)
 
     class Meta:
         model = Course
-        fields = ('id', # 클릭 시 접속을 위함
-                  'title', # 과외명
-                  'thumbnail_image_url', # 썸네일 이미지
-                  #'price', # 가격
-                  'max_tutees', # 최대 수강생 인원
-                  'status', # 현재 상태
-                  'view_count', # 조회수
-                  'description', # 과외 소개
-                  'current_tutees_count', # 현재 수강생 인원
-                  'tutor_name', # tutor 이름
-                  ) 
+        fields = [
+            'id',                   # 과외 ID
+            'title',                # 과외 제목
+            'thumbnail_image_url',  # 썸네일 URL
+            'description',          # 과외 소개
+            'max_tutees',           # 최대 인원
+            'current_tutees_count', # 현재 인원
+            'status',               # 상태 (모집중, 종료 등)
+            'average_rating',       #  평균 평점
+            'tutor_name',           # 튜터 이름
+            'category_name',        # 카테고리명
+            'created_at',           # 등록일
+        ]
+
 
 # 튜터 프로필 표시용
 class TutorSerializer(serializers.ModelSerializer):
