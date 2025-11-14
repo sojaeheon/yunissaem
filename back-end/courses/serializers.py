@@ -20,14 +20,10 @@ class CourseListSerializer(serializers.ModelSerializer):
             'title',                # 과외 제목
             'thumbnail_image_url',  # 썸네일 URL
             'description',          # 과외 소개
-            'curriculum',           # 커리큘럼
             'max_tutees',           # 최대 인원
             'current_tutees_count', # 현재 인원
             'status',               # 상태 (모집중, 종료 등)
-            'view_count',           # 조회수
-            'review_count',         # 리뷰 수
             'average_rating',       #  평균 평점
-            'popularity_score',     # 인기 점수 (가중치 기반)
             'tutor_name',           # 튜터 이름
             'category_name',        # 카테고리명
             'created_at',           # 등록일
