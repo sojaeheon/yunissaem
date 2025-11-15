@@ -1,9 +1,10 @@
-from django.urls import path, include
-from .views import popular_view, new_view,course_list_by_category,search_courses
+from django.urls import path
+from .views import CourseDetailView, CourseWishToggleView, CourseStatusUpdateView, course_list_by_category, search_courses
 
 urlpatterns = [
-    path('popular/', popular_view),
-    path('new/', new_view),
-    path('categoris/<int:category_id>',course_list_by_category),
-    path('courses/search/',search_courses)
+    path('<int:course_id>/', CourseDetailView.as_view(), name='course-detail'),
+    path('<int:course_id>/wish/', CourseWishToggleView.as_view(), name='course-like-toggle'),
+    path('<int:course_id>/status/', CourseStatusUpdateView.as_view(), name='course-status-update'),
+    path('category/<int:category_id>',course_list_by_category),
+    path('search/',search_courses)
 ]
