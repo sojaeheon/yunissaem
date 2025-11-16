@@ -1,10 +1,65 @@
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.db.models import Q
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework import status
 from .models import Course, WishedCourses, Category
 from .serializers import CourseDetailSerializer,CourseListSerializer
 from accounts.models import User
+
+# 검색 조회 api
+@api_view(['GET'])
+def search_courses(request):
+    """
+    🔍 과외 검색 API
+    - 검색 키워드: ?q=키워드
+    - 검색 기준: ?filter=title / content / author
+    - 정렬 기준: ?sort=popular / latest / review
+    """
+    query = request.GET.get('q', '').strip()  # 검색어
+    search_filter = request.GET.get('filter', 'all')  # 검색 기준
+    sort = request.GET.get('sort', 'latest')  # 정렬 기준 (기본값: 최신순)
+
+    # ✅ 검색어가 비어있을 경우
+    if not query:
+        return Response({"error": "검색어를 입력해주세요."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # ✅ 검색 조건 (Q 객체로 복수 필드 검색)
+    # Q 라이브러리를 활용하여 or, and, not 조건 사용
+    # incontains => 대소문자 구분하지 않는 부분 문자열 검색
+        # filter() + Q()로 여러 컬럼에서 부분 일치 검색
+    if search_filter == 'content':  
+        # 제목 + 내용 통합 검색
+        courses = Course.objects.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query)
+        )
+
+    elif search_filter == 'author':  
+        courses = Course.objects.filter(
+            Q(tutor__name__icontains=query)
+        )
+
+
+    # ✅ 정렬 조건
+    if sort == 'popular':
+        courses = courses.order_by('-popularity_score', '-created_at')
+    elif sort == 'review':
+        courses = courses.order_by('-review_count', '-created_at')
+    else:
+        courses = courses.order_by('-created_at')
+
+    # ✅ 직렬화 후 반환
+    serializer = CourseListSerializer(courses[:30], many=True)
+    return Response({
+        "query": query,
+        "filter": search_filter,
+        "sort": sort,
+        "total": len(serializer.data),
+        "results": serializer.data
+    })
 
 # ✅ 카테고리별 과외 목록 조회
 @api_view(['GET'])
@@ -30,7 +85,7 @@ def course_list_by_category(request, category_id):
     # sort값이 없으면 'latest'(최신순)으로 설정됨
     # 🔸 정렬 파라미터 (기본값: latest)
     sort = request.GET.get('sort', 'latest')
-
+    
     # 🔹 해당 카테고리의 활성화된 과외만 조회
     courses = Course.objects.filter(category=category)
 

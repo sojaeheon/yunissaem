@@ -3,6 +3,20 @@ from .models import Course, Category
 from accounts.models import User
 from reviews.serializers import ReviewSerializer
 
+
+
+# =========================================================
+# ✅ 카테고리 Serializer
+# =========================================================
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+        
+
+# =========================================================
+# ✅ 과외 목록용 Serializer (리스트 페이지)
+# =========================================================
 class CourseListSerializer(serializers.ModelSerializer):
     """
     카테고리별 과외 목록 조회용 Serializer
