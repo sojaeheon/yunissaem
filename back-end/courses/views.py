@@ -42,12 +42,6 @@ def search_courses(request):
             Q(tutor__name__icontains=query)
         )
 
-    else:  # all
-        courses = Course.objects.filter(
-            Q(title__icontains=query) |
-            Q(description__icontains=query) |
-            Q(tutor__name__icontains=query)
-        )
 
     # ✅ 정렬 조건
     if sort == 'popular':
