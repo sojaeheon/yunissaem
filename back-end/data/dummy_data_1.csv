@@ -1,0 +1,101 @@
+id,title,thumbnail_image_url,introduction,curriculum,price,max_tutees,tutor,view_count,created_at,updated_at
+1,Engineer II,http://dummyimage.com/122x100.png/cc0000/ffffff,nitzy,cituu,299.99,81,1,0,2025-01-16,2025-10-07
+2,GIS Technical Architect,http://dummyimage.com/100x100.png/dddddd/000000,okiyy,tplrv,12.99,35,5,7,2025-06-05,2025-10-10
+3,Budget/Accounting Analyst III,http://dummyimage.com/166x100.png/5fa2dd/ffffff,apzww,pajbh,1.99,1,5,5,2025-02-11,2025-10-01
+4,Data Coordinator,http://dummyimage.com/174x100.png/ff4444/ffffff,rgzpy,ugzgk,5.49,56,4,9,2024-11-20,2025-10-04
+5,GIS Technical Architect,http://dummyimage.com/183x100.png/ff4444/ffffff,qcusl,szkqb,29.99,45,5,3,2024-10-25,2025-10-01
+6,Mechanical Systems Engineer,http://dummyimage.com/107x100.png/ff4444/ffffff,tytfn,gedbm,34.99,94,2,2,2025-02-25,2025-10-08
+7,Teacher,http://dummyimage.com/243x100.png/cc0000/ffffff,xbkol,rrygf,19.99,35,5,8,2024-10-23,2025-10-02
+8,Account Coordinator,http://dummyimage.com/112x100.png/cc0000/ffffff,aoozq,pqrbj,22.99,56,7,2,2025-06-23,2025-10-07
+9,Data Coordinator,http://dummyimage.com/244x100.png/cc0000/ffffff,psxpy,rhawj,9.99,54,1,9,2025-01-21,2025-10-10
+10,Accountant II,http://dummyimage.com/170x100.png/ff4444/ffffff,fnavm,qumfv,3.29,7,1,0,2025-01-04,2025-10-01
+11,Financial Analyst,http://dummyimage.com/167x100.png/5fa2dd/ffffff,gembe,pcrhi,4.99,41,3,1,2025-07-14,2025-10-07
+12,Financial Analyst,http://dummyimage.com/164x100.png/5fa2dd/ffffff,pmgtb,mrdvg,44.99,19,3,6,2025-08-12,2025-10-03
+13,Executive Secretary,http://dummyimage.com/113x100.png/ff4444/ffffff,jljhk,qxqhu,39.99,90,6,3,2025-04-17,2025-10-06
+14,Automation Specialist II,http://dummyimage.com/161x100.png/5fa2dd/ffffff,knkol,yuqde,9.99,73,4,6,2024-11-27,2025-10-05
+15,Sales Representative,http://dummyimage.com/242x100.png/5fa2dd/ffffff,ndytk,bziev,39.99,33,5,1,2024-11-16,2025-10-11
+16,Business Systems Development Analyst,http://dummyimage.com/100x100.png/ff4444/ffffff,rgqnv,irhki,3.79,16,2,4,2025-04-24,2025-10-08
+17,Nuclear Power Engineer,http://dummyimage.com/212x100.png/cc0000/ffffff,gyncj,sqgtp,19.99,98,6,10,2025-08-25,2025-10-06
+18,Accounting Assistant IV,http://dummyimage.com/153x100.png/cc0000/ffffff,oamuh,ktikq,14.99,9,3,9,2025-02-08,2025-09-30
+19,Registered Nurse,http://dummyimage.com/131x100.png/5fa2dd/ffffff,rqmpk,gvuwx,8.99,68,6,9,2024-11-08,2025-10-03
+20,Account Representative III,http://dummyimage.com/217x100.png/5fa2dd/ffffff,aqupf,osbaa,14.99,100,5,8,2024-11-28,2025-10-03
+21,Help Desk Technician,http://dummyimage.com/184x100.png/cc0000/ffffff,hbzks,yvplu,2.39,60,5,5,2024-11-10,2025-10-05
+22,Occupational Therapist,http://dummyimage.com/198x100.png/ff4444/ffffff,uedrl,zwmuc,2.99,34,6,5,2024-10-18,2025-10-10
+23,Clinical Specialist,http://dummyimage.com/229x100.png/dddddd/000000,qwnkl,mrzhw,5.49,36,6,3,2025-05-22,2025-10-07
+24,General Manager,http://dummyimage.com/114x100.png/ff4444/ffffff,nxcmj,jjtlg,79.99,29,7,7,2024-12-08,2025-10-03
+25,Senior Editor,http://dummyimage.com/150x100.png/ff4444/ffffff,doloy,rskew,39.99,84,6,1,2025-04-14,2025-10-07
+26,Compensation Analyst,http://dummyimage.com/161x100.png/ff4444/ffffff,wopjh,xmpdi,34.99,35,3,8,2024-12-26,2025-10-11
+27,Graphic Designer,http://dummyimage.com/218x100.png/cc0000/ffffff,rzaex,uujdg,4.79,47,2,10,2025-07-03,2025-09-30
+28,Computer Systems Analyst I,http://dummyimage.com/174x100.png/ff4444/ffffff,tzlge,gobdo,22.99,49,4,9,2024-10-31,2025-10-05
+29,Business Systems Development Analyst,http://dummyimage.com/119x100.png/dddddd/000000,hqirc,glsxa,3.29,79,5,4,2025-02-21,2025-10-04
+30,Internal Auditor,http://dummyimage.com/200x100.png/5fa2dd/ffffff,kahyn,lyisc,8.99,70,7,5,2024-12-04,2025-10-04
+31,Web Designer II,http://dummyimage.com/208x100.png/cc0000/ffffff,lppfq,ovdzx,19.99,18,1,1,2024-11-24,2025-09-30
+32,Junior Executive,http://dummyimage.com/185x100.png/5fa2dd/ffffff,vcuam,upkty,2.49,94,6,4,2025-05-03,2025-10-02
+33,Project Manager,http://dummyimage.com/137x100.png/ff4444/ffffff,ditld,npfxb,8.99,64,3,1,2025-06-05,2025-10-05
+34,VP Sales,http://dummyimage.com/149x100.png/cc0000/ffffff,wtngd,syisy,29.99,35,6,4,2025-03-16,2025-10-05
+35,Nuclear Power Engineer,http://dummyimage.com/143x100.png/cc0000/ffffff,azfbo,kyadl,4.19,20,2,5,2024-12-03,2025-10-04
+36,Data Coordinator,http://dummyimage.com/222x100.png/5fa2dd/ffffff,llxhn,zfkwb,19.99,12,1,0,2025-02-22,2025-10-07
+37,Product Engineer,http://dummyimage.com/173x100.png/dddddd/000000,biecd,ryqma,22.99,37,2,8,2025-01-22,2025-10-08
+38,Clinical Specialist,http://dummyimage.com/148x100.png/dddddd/000000,jupnk,xhvcj,14.99,49,6,8,2025-04-11,2025-10-01
+39,Professor,http://dummyimage.com/136x100.png/5fa2dd/ffffff,kbdan,ujaig,19.99,31,1,7,2024-12-04,2025-10-05
+40,Environmental Tech,http://dummyimage.com/190x100.png/cc0000/ffffff,qxgip,lbovp,19.99,85,5,4,2025-02-17,2025-10-05
+41,Automation Specialist II,http://dummyimage.com/174x100.png/cc0000/ffffff,qhrib,jyryl,6.99,16,4,4,2025-03-28,2025-10-06
+42,Human Resources Assistant I,http://dummyimage.com/168x100.png/dddddd/000000,qthee,vqtae,5.99,1,6,7,2025-04-26,2025-10-07
+43,Software Test Engineer IV,http://dummyimage.com/247x100.png/5fa2dd/ffffff,qdchn,kshsn,39.99,87,7,8,2025-04-02,2025-10-08
+44,VP Product Management,http://dummyimage.com/207x100.png/5fa2dd/ffffff,xywsk,fdzpy,1.79,46,3,4,2025-02-09,2025-10-02
+45,Chemical Engineer,http://dummyimage.com/136x100.png/5fa2dd/ffffff,lomlj,vseun,1.89,34,4,0,2025-07-03,2025-10-02
+46,Nuclear Power Engineer,http://dummyimage.com/140x100.png/cc0000/ffffff,tgazs,vkesn,5.99,94,3,4,2025-03-20,2025-10-08
+47,Cost Accountant,http://dummyimage.com/137x100.png/dddddd/000000,tqbkd,duvyr,12.99,17,4,0,2025-02-02,2025-10-01
+48,Editor,http://dummyimage.com/210x100.png/ff4444/ffffff,qylfb,sqqqf,7.99,7,4,8,2025-08-17,2025-10-02
+49,Administrative Officer,http://dummyimage.com/246x100.png/5fa2dd/ffffff,jfzlp,uqwuh,1.99,94,6,0,2024-10-16,2025-09-30
+50,Food Chemist,http://dummyimage.com/134x100.png/cc0000/ffffff,bhjdr,csbme,4.19,98,4,3,2024-10-13,2025-10-01
+51,Environmental Specialist,http://dummyimage.com/114x100.png/cc0000/ffffff,xuawn,ccren,4.49,97,5,1,2025-03-02,2025-10-10
+52,Electrical Engineer,http://dummyimage.com/223x100.png/dddddd/000000,mgaqt,nttjy,2.59,89,7,1,2025-05-17,2025-10-01
+53,Account Executive,http://dummyimage.com/157x100.png/5fa2dd/ffffff,nnbil,ytswk,49.99,63,2,4,2024-11-21,2025-09-30
+54,Environmental Specialist,http://dummyimage.com/131x100.png/5fa2dd/ffffff,vsodu,ezcpo,12.99,72,4,10,2025-07-10,2025-10-02
+55,Financial Analyst,http://dummyimage.com/209x100.png/cc0000/ffffff,ylkny,ltwlr,299.99,70,6,10,2025-02-15,2025-10-09
+56,Associate Professor,http://dummyimage.com/178x100.png/5fa2dd/ffffff,xosyd,xderf,4.99,85,4,9,2025-02-10,2025-10-10
+57,Civil Engineer,http://dummyimage.com/160x100.png/cc0000/ffffff,oubxz,nwrjy,2.99,83,7,8,2025-04-16,2025-10-07
+58,Tax Accountant,http://dummyimage.com/118x100.png/cc0000/ffffff,wfpvf,xoast,39.99,94,5,8,2025-01-03,2025-10-05
+59,Quality Engineer,http://dummyimage.com/146x100.png/dddddd/000000,qjcjc,omqec,2.49,31,2,7,2024-11-03,2025-10-07
+60,Sales Representative,http://dummyimage.com/184x100.png/ff4444/ffffff,hcuhe,uslmp,3.99,12,6,4,2024-11-23,2025-10-05
+61,Speech Pathologist,http://dummyimage.com/212x100.png/ff4444/ffffff,epdgv,utkjz,44.99,40,7,6,2025-06-21,2025-10-05
+62,Structural Analysis Engineer,http://dummyimage.com/247x100.png/cc0000/ffffff,ytomf,oapcq,22.99,1,4,9,2025-07-05,2025-10-03
+63,Associate Professor,http://dummyimage.com/110x100.png/cc0000/ffffff,rgece,lezwp,4.99,14,7,2,2025-02-05,2025-10-07
+64,Software Test Engineer II,http://dummyimage.com/107x100.png/5fa2dd/ffffff,ptqcj,fwspu,299.99,83,6,1,2025-03-07,2025-10-05
+65,Structural Engineer,http://dummyimage.com/100x100.png/cc0000/ffffff,bmkco,thxgy,2.49,99,6,1,2025-02-16,2025-10-11
+66,Health Coach I,http://dummyimage.com/249x100.png/ff4444/ffffff,blvhs,xzcym,14.99,68,1,1,2024-11-13,2025-10-11
+67,General Manager,http://dummyimage.com/193x100.png/cc0000/ffffff,kbsez,kwtcd,49.99,87,3,0,2024-12-02,2025-10-07
+68,Speech Pathologist,http://dummyimage.com/232x100.png/ff4444/ffffff,jqxkl,bhejz,2.89,61,3,3,2025-05-07,2025-10-11
+69,Account Representative II,http://dummyimage.com/217x100.png/dddddd/000000,fxvxp,xpgtn,19.99,37,2,5,2025-08-06,2025-10-01
+70,Sales Representative,http://dummyimage.com/183x100.png/dddddd/000000,tysqc,ipkdz,3.99,65,7,9,2025-02-16,2025-10-10
+71,Data Coordinator,http://dummyimage.com/118x100.png/ff4444/ffffff,nqtrh,cxpvh,4.29,54,7,8,2025-07-09,2025-10-11
+72,Junior Executive,http://dummyimage.com/180x100.png/dddddd/000000,sncpv,fkmpg,19.99,23,4,2,2025-01-15,2025-10-04
+73,Media Manager II,http://dummyimage.com/194x100.png/ff4444/ffffff,lmbmc,mmtcx,29.99,77,6,1,2025-04-09,2025-10-09
+74,Information Systems Manager,http://dummyimage.com/247x100.png/cc0000/ffffff,oiqzt,yunyb,22.99,57,6,6,2025-01-17,2025-10-07
+75,Cost Accountant,http://dummyimage.com/160x100.png/ff4444/ffffff,jfpld,umgrm,8.99,50,6,6,2025-02-21,2025-10-08
+76,Sales Associate,http://dummyimage.com/199x100.png/cc0000/ffffff,vxvst,izzin,3.99,4,6,10,2024-12-01,2025-10-10
+77,Chemical Engineer,http://dummyimage.com/160x100.png/cc0000/ffffff,cdupd,nvesk,3.49,12,5,6,2025-04-23,2025-10-07
+78,Information Systems Manager,http://dummyimage.com/184x100.png/5fa2dd/ffffff,frsjq,suakb,3.29,67,7,7,2025-06-24,2025-10-03
+79,Programmer IV,http://dummyimage.com/141x100.png/cc0000/ffffff,jxjve,befxe,29.99,25,4,4,2025-04-25,2025-10-02
+80,Editor,http://dummyimage.com/163x100.png/dddddd/000000,xwacw,iicoq,0.99,27,4,7,2025-05-08,2025-10-01
+81,Software Consultant,http://dummyimage.com/246x100.png/ff4444/ffffff,kagve,hbvap,39.99,33,6,10,2025-07-06,2025-10-04
+82,Staff Scientist,http://dummyimage.com/202x100.png/cc0000/ffffff,nteah,vglcs,39.99,77,5,8,2025-01-31,2025-09-30
+83,Business Systems Development Analyst,http://dummyimage.com/232x100.png/5fa2dd/ffffff,gjhei,xzmaw,14.99,78,5,4,2024-11-17,2025-10-02
+84,Senior Developer,http://dummyimage.com/249x100.png/5fa2dd/ffffff,vlveu,prkgd,2.79,60,3,6,2025-02-21,2025-10-08
+85,Staff Accountant II,http://dummyimage.com/155x100.png/dddddd/000000,ghpbr,cxtwm,22.99,46,1,4,2025-02-26,2025-10-03
+86,Budget/Accounting Analyst I,http://dummyimage.com/151x100.png/dddddd/000000,ayion,lkard,2.99,93,3,5,2024-10-15,2025-10-01
+87,Account Representative II,http://dummyimage.com/198x100.png/cc0000/ffffff,rrlky,cajim,9.99,94,6,1,2024-12-07,2025-10-09
+88,Software Consultant,http://dummyimage.com/239x100.png/ff4444/ffffff,pqnqy,ljglc,3.99,12,7,6,2025-04-06,2025-10-07
+89,Geological Engineer,http://dummyimage.com/212x100.png/dddddd/000000,qjtlh,bznak,3.49,57,5,1,2025-06-12,2025-10-05
+90,Cost Accountant,http://dummyimage.com/158x100.png/cc0000/ffffff,nkrix,hhdsg,5.49,21,4,10,2024-10-23,2025-10-08
+91,Product Engineer,http://dummyimage.com/230x100.png/cc0000/ffffff,gaupt,kyhib,7.99,85,6,1,2025-01-05,2025-10-10
+92,Registered Nurse,http://dummyimage.com/159x100.png/5fa2dd/ffffff,lnwye,cuxek,14.99,82,5,7,2025-05-04,2025-10-04
+93,Executive Secretary,http://dummyimage.com/214x100.png/dddddd/000000,qmwvb,rlmcl,34.99,28,4,2,2025-07-30,2025-10-03
+94,Software Engineer IV,http://dummyimage.com/216x100.png/cc0000/ffffff,urznn,gjsvy,39.99,24,7,6,2025-07-09,2025-10-08
+95,Recruiting Manager,http://dummyimage.com/120x100.png/cc0000/ffffff,nsgzw,qhkur,19.99,52,1,7,2025-08-20,2025-10-10
+96,Environmental Specialist,http://dummyimage.com/228x100.png/cc0000/ffffff,ravxi,blyoa,2.49,58,6,3,2025-08-28,2025-10-08
+97,Assistant Manager,http://dummyimage.com/157x100.png/5fa2dd/ffffff,vvafw,slqxo,3.89,72,1,0,2025-06-16,2025-10-04
+98,Geologist IV,http://dummyimage.com/171x100.png/dddddd/000000,thrcg,wrxxc,6.49,85,1,3,2025-05-21,2025-10-03
+99,Technical Writer,http://dummyimage.com/220x100.png/dddddd/000000,eingq,pzill,39.99,88,1,4,2024-12-22,2025-09-30
+100,Assistant Media Planner,http://dummyimage.com/151x100.png/cc0000/ffffff,irdix,qjvjx,29.99,26,5,5,2025-01-12,2025-10-10
