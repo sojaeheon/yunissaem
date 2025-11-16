@@ -75,7 +75,30 @@ $ python manage.py migrate
 ```bash
 $ python manage.py runserver
 ```
-* 접속 주소: http://127.0.0.1:8000
+* 접속 주소: http://127.0.0.1:8000  
+
+## 로컬 DB 설정  
+
+### 1. db.sqlite3 파일 생성  
+
+```bash
+$ cd back-end/
+```
+
+```bash
+$ python manage.py migrate
+```
+
+### 2. csv 파일로부터 데이터 생성  
+
+```bash
+$ python seed_all_data.py
+```
+
+![alt text](image.png)  
+
+**중간에 멈춘 경우, Auto incremenet로 인해 이후 작업이 정상 수행되지 않을 수 있으므로 db.sqlite를 삭제한 다음, 1번 - migrate 부터 다시 실행합니다.**
+
 
 ## 📌 기타 참고 사항
 > Django 앱을 추가하면 settings.py의 INSTALLED_APPS에 해당 앱을 등록해야 합니다.  
