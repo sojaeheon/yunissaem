@@ -2,6 +2,7 @@ from django.db import models
 from accounts.models import User
 from reviews.models import Review
 
+# 음악, 운동, 예술, 프로그래밍, 금융/재테크, 외국어 카테고리가 존재한다.
 class Category(models.Model):
     name = models.CharField()
 
@@ -16,7 +17,7 @@ class Course(models.Model):
     thumbnail: 과외 썸네일 이미지 경로
     description: 과외 소개
     curriculum:	커리큘럼 내용
-    max_students: 최대 수강 인원
+    max_tutees: 최대 수강 인원
     + status: 상태 - (준비중, 모집중, 강의중, 종료)
     + view_count: 조회수
 
