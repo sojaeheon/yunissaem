@@ -6,8 +6,9 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework import status
 from .models import Course, WishedCourses, Category
-from .serializers import CourseDetailSerializer,CourseListSerializer
+from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer
 from accounts.models import User
+from django.views.decorators.csrf import csrf_exempt
 
 # 검색 조회 api
 @api_view(['GET'])
@@ -108,6 +109,22 @@ def course_list_by_category(request, category_id):
         "total": len(serializer.data),
         "courses": serializer.data
     })
+
+@csrf_exempt
+@api_view(['POST'])
+def create_course(request):
+    serializer = CourseCreateSerializer(data=request.data)
+
+    if serializer.is_valid():
+        course = serializer.save()
+        return Response({
+            "message": "과외가 성공적으로 생성되었습니다.",
+            "course_id": course.id
+        }, status=201)
+
+    return Response(serializer.errors, status=400)
+
+
 
 class CourseDetailView(APIView):
     """

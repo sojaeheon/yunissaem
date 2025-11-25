@@ -37,11 +37,36 @@ class CourseListSerializer(serializers.ModelSerializer):
             'max_tutees',           # 최대 인원
             'current_tutees_count', # 현재 인원
             'status',               # 상태 (모집중, 종료 등)
-            'average_rating',       #  평균 평점
+            'average_rating',       # 평균 평점
             'tutor_name',           # 튜터 이름
             'category_name',        # 카테고리명
             'created_at',           # 등록일
         ]
+
+
+# =========================================================
+# ✅ 과외 생성 Serializer 
+# =========================================================
+class CourseCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = [
+            "tutor",
+            "category",
+            "title",
+            "thumbnail_image_url",
+            "description",
+            "curriculum",
+            "max_tutees"
+        ]
+
+    def create(self, validated_data):
+        # 기본 이미지
+        if not validated_data.get("thumbnail_image_url"):
+            validated_data["thumbnail_image_url"] = "https://i.imgur.com/C9Z9Z3O.png"
+
+        return Course.objects.create(**validated_data)
+
 
 
 # 튜터 프로필 표시용
