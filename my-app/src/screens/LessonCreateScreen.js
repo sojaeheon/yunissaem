@@ -17,15 +17,17 @@ import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
 
 export default function LessonCreateScreen({ navigation, route }) {
-  const [title, setTitle] = useState("");
-  const [capacity, setCapacity] = useState("");
-  const [tutorIntro, setTutorIntro] = useState("");
-  const [intro, setIntro] = useState("");
-  const [curriculum, setCurriculum] = useState("");
-  const [thumbnail, setThumbnail] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [categoryId, setCategoryId] = useState("2");
+  // ===== State 관리 =====
+  const [title, setTitle] = useState(""); // 과외 제목
+  const [capacity, setCapacity] = useState(""); // 수강 인원
+  const [tutorIntro, setTutorIntro] = useState(""); // 강사 소개
+  const [intro, setIntro] = useState(""); // 강의 소개
+  const [curriculum, setCurriculum] = useState(""); // 커리큘럼
+  const [thumbnail, setThumbnail] = useState(null); // 썸네일 이미지 URI
+  const [loading, setLoading] = useState(false); // 업로드 중 로딩 상태
+  const [categoryId, setCategoryId] = useState("2"); // 선택된 카테고리 ID (기본값: 음악)
   
+  // ===== 카테고리 목록 (고정 데이터) =====
   const categories = [
     { id: 2, name: "음악" },
     { id: 3, name: "운동" },
@@ -35,6 +37,8 @@ export default function LessonCreateScreen({ navigation, route }) {
     { id: 7, name: "외국어" },
   ];
 
+  // ===== 플랫폼별 Alert 처리 함수 =====
+  // 웹에서는 window.alert, 네이티브에서는 Alert.alert 사용
   const showAlert = (title, message) => {
     if (Platform.OS === 'web') {
       window.alert(`${title}\n\n${message}`);
@@ -43,6 +47,8 @@ export default function LessonCreateScreen({ navigation, route }) {
     }
   };
 
+  // ===== 헤더 설정 =====
+  // 화면 상단에 "강의 생성" 제목과 뒤로가기 버튼 표시
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: true,
@@ -57,6 +63,8 @@ export default function LessonCreateScreen({ navigation, route }) {
     });
   }, [navigation]);
 
+  // ===== 이미지 권한 요청 (앱 실행 시 1회) =====
+  // 웹에서는 스킵, 네이티브 앱에서만 갤러리 접근 권한 요청
   useEffect(() => {
     (async () => {
       if (Platform.OS !== "web") {
@@ -68,7 +76,9 @@ export default function LessonCreateScreen({ navigation, route }) {
     })();
   }, []);
 
+  // ===== 과외 업로드 함수 =====
   const handleUpload = async () => {
+    // 1. 필수 입력 필드 검증
     if (!title.trim()) {
       showAlert("입력 오류", "제목을 입력해주세요.");
       return;
@@ -94,25 +104,32 @@ export default function LessonCreateScreen({ navigation, route }) {
       return;
     }
 
-    setLoading(true);
+    setLoading(true); // 로딩 시작
     
     try {
+      // 2. 플랫폼별 API URL 설정
+      // Android 에뮬레이터: 10.0.2.2 (로컬호스트 주소)
+      // 그 외: localhost
       const API_BASE_URL =
         Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://localhost:8000";
       const endpoint = `${API_BASE_URL}/api/courses/create/`;
 
+      // 3. FormData 생성 (백엔드로 전송할 데이터)
       const form = new FormData();
-      form.append("tutor", "1");
-      form.append("category", String(categoryId));
-      form.append("title", title);
-      form.append("description", intro || "");
-      form.append("curriculum", curriculum || "");
-      form.append("max_tutees", String(parseInt(capacity, 10) || 1));
+      form.append("tutor", "1"); // 튜터 ID (임시: 실제로는 로그인한 사용자 ID)
+      form.append("category", String(categoryId)); // 카테고리 ID
+      form.append("title", title); // 제목
+      form.append("description", intro || ""); // 강의 소개
+      form.append("curriculum", curriculum || ""); // 커리큘럼
+      form.append("max_tutees", String(parseInt(capacity, 10) || 1)); // 최대 인원
 
+      // 썸네일이 선택되었으면 기본 이미지 URL 추가
+      // (실제 파일 업로드는 미지원, URL만 전송)
       if (thumbnail) {
         form.append("thumbnail_image_url", "https://i.imgur.com/C9Z9Z3O.png");
       }
 
+      // 4. 백엔드 API 호출
       const res = await fetch(endpoint, {
         method: "POST",
         body: form,
@@ -121,22 +138,27 @@ export default function LessonCreateScreen({ navigation, route }) {
 
       const json = await res.json();
 
+      // 5. 응답 처리
       if (!res.ok) {
         showAlert("업로드 실패", JSON.stringify(json));
         return;
       }
 
+      // 6. 성공 시 Home 화면으로 이동
       navigation.navigate("Home");
       
     } catch (e) {
+      // 7. 네트워크 에러 등 예외 처리
       showAlert("오류", "업로드 중 오류가 발생했습니다.");
     } finally {
-      setLoading(false);
+      setLoading(false); // 로딩 종료
     }
   };
 
+  // ===== 썸네일 이미지 선택 함수 =====
   const onPressThumbnail = async () => {
     try {
+      // 1. 권한 확인 (앱에서만)
       if (Platform.OS !== "web") {
         const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
         if (status !== "granted") {
@@ -148,36 +170,43 @@ export default function LessonCreateScreen({ navigation, route }) {
         }
       }
 
+      // 2. 이미지 선택 다이얼로그 열기
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 0.8,
-        aspect: [16, 9],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, // 이미지만 선택
+        allowsEditing: true, // 편집 기능 활성화
+        quality: 0.8, // 이미지 품질 (0.0~1.0)
+        aspect: [16, 9], // 가로세로 비율
       });
 
+      // 3. 취소 여부 확인
       const canceled = result.canceled ?? result.cancelled ?? false;
       if (canceled) return;
 
+      // 4. 선택된 이미지 URI 저장
       const uri =
         result.assets && result.assets.length > 0
           ? result.assets[0].uri
           : result.uri;
 
       if (uri) {
-        setThumbnail(uri);
+        setThumbnail(uri); // 썸네일 상태 업데이트
       }
     } catch (e) {
       showAlert("오류", "이미지 선택 중 오류가 발생했습니다.");
     }
   };
 
+  // ===== UI 렌더링 =====
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
+        {/* 썸네일 업로드 버튼 */}
         <TouchableOpacity style={styles.thumbnailBox} onPress={onPressThumbnail} activeOpacity={0.8}>
           {thumbnail ? (
+            // 썸네일이 선택된 경우: 이미지 표시
             <Image source={{ uri: thumbnail }} style={styles.thumbnailImage} resizeMode="cover" />
           ) : (
+            // 썸네일이 없는 경우: 플레이스홀더 표시
             <View style={styles.thumbnailPlaceholder}>
               <Ionicons name="image" size={28} color="#bbb" />
               <Text style={styles.thumbnailText}>썸네일 업로드</Text>
@@ -185,6 +214,7 @@ export default function LessonCreateScreen({ navigation, route }) {
           )}
         </TouchableOpacity>
 
+        {/* 카테고리 선택 */}
         <Text style={styles.label}>카테고리를 선택해주세요</Text>
         <View style={styles.pickerContainer}>
           <Picker
@@ -198,6 +228,7 @@ export default function LessonCreateScreen({ navigation, route }) {
           </Picker>
         </View>
 
+        {/* 제목 입력 */}
         <Text style={styles.label}>어떤 제목으로 올릴까요?</Text>
         <TextInput
           style={[styles.input, { height: 70 }]}
@@ -208,6 +239,7 @@ export default function LessonCreateScreen({ navigation, route }) {
           multiline
         />
 
+        {/* 수강 인원 입력 */}
         <Text style={styles.label}>몇 명까지 받을 건가요?</Text>
         <TextInput
           style={styles.input}
@@ -218,6 +250,7 @@ export default function LessonCreateScreen({ navigation, route }) {
           keyboardType="numeric"
         />
 
+        {/* 강사 소개 입력 */}
         <Text style={styles.label}>자신을 소개해 주세요!</Text>
         <TextInput
           style={[styles.input, { height: 150 }]}
@@ -228,6 +261,7 @@ export default function LessonCreateScreen({ navigation, route }) {
           multiline
         />
 
+        {/* 강의 소개 입력 */}
         <Text style={styles.label}>어떤 강의인지 소개해주세요!</Text>
         <TextInput
           style={[styles.input, { height: 200 }]}
@@ -238,6 +272,7 @@ export default function LessonCreateScreen({ navigation, route }) {
           multiline
         />
 
+        {/* 커리큘럼 입력 */}
         <Text style={styles.label}>주차별 또는 강의별 진행 계획을 적어주세요!</Text>
         <TextInput
           style={[styles.input, { height: 160 }]}
@@ -248,8 +283,10 @@ export default function LessonCreateScreen({ navigation, route }) {
           multiline
         />
 
+        {/* 업로드 버튼 */}
         <View style={{ marginTop: 20 }}>
           <Button title={loading ? "업로드 중..." : "과외 업로드"} onPress={handleUpload} disabled={loading} />
+          {/* 로딩 중일 때 스피너 표시 */}
           {loading && (
             <View style={{ marginTop: 10, alignItems: "center" }}>
               <ActivityIndicator size="small" color="tomato" />
@@ -258,6 +295,7 @@ export default function LessonCreateScreen({ navigation, route }) {
         </View>
       </ScrollView>
 
+      {/* AI 챗봇 FAB (Floating Action Button) */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate("AIChatbot")}
@@ -269,6 +307,7 @@ export default function LessonCreateScreen({ navigation, route }) {
   );
 }
 
+// ===== 스타일 정의 =====
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#fff" },
   label: {
@@ -323,16 +362,16 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   fab: {
-    position: "absolute",
+    position: "absolute", // 화면에 고정
     bottom: 24,
     left: 16,
     width: 52,
     height: 52,
-    borderRadius: 26,
+    borderRadius: 26, // 원형
     backgroundColor: "tomato",
     justifyContent: "center",
     alignItems: "center",
-    elevation: 6,
-    zIndex: 100,
+    elevation: 6, // 그림자 효과 (Android)
+    zIndex: 100, // 최상단 배치
   },
 });
