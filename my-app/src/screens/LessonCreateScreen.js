@@ -35,6 +35,14 @@ export default function LessonCreateScreen({ navigation, route }) {
     { id: 7, name: "외국어" },
   ];
 
+  const showAlert = (title, message) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}\n\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: true,
@@ -54,7 +62,7 @@ export default function LessonCreateScreen({ navigation, route }) {
       if (Platform.OS !== "web") {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== "granted") {
-          Alert.alert("권한 필요", "사진을 업로드하려면 미디어 라이브러리 접근 권한이 필요합니다.");
+          showAlert("권한 필요", "사진을 업로드하려면 미디어 라이브러리 접근 권한이 필요합니다.");
         }
       }
     })();
@@ -62,11 +70,32 @@ export default function LessonCreateScreen({ navigation, route }) {
 
   const handleUpload = async () => {
     if (!title.trim()) {
-      Alert.alert("오류", "제목을 입력해주세요.");
+      showAlert("입력 오류", "제목을 입력해주세요.");
+      return;
+    }
+
+    if (!capacity.trim() || parseInt(capacity, 10) <= 0) {
+      showAlert("입력 오류", "수강 인원을 올바르게 입력해주세요.");
+      return;
+    }
+
+    if (!tutorIntro.trim()) {
+      showAlert("입력 오류", "강사 소개를 입력해주세요.");
+      return;
+    }
+
+    if (!intro.trim()) {
+      showAlert("입력 오류", "강의 소개를 입력해주세요.");
+      return;
+    }
+
+    if (!curriculum.trim()) {
+      showAlert("입력 오류", "커리큘럼을 입력해주세요.");
       return;
     }
 
     setLoading(true);
+    
     try {
       const API_BASE_URL =
         Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://localhost:8000";
@@ -93,15 +122,14 @@ export default function LessonCreateScreen({ navigation, route }) {
       const json = await res.json();
 
       if (!res.ok) {
-        Alert.alert("업로드 실패", JSON.stringify(json));
+        showAlert("업로드 실패", JSON.stringify(json));
         return;
       }
 
-      Alert.alert("업로드 완료", "과외가 생성되었습니다!", [
-        { text: "확인", onPress: () => navigation.navigate("Home") },
-      ]);
+      navigation.navigate("Home");
+      
     } catch (e) {
-      Alert.alert("오류", "업로드 중 오류가 발생했습니다.");
+      showAlert("오류", "업로드 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -114,7 +142,7 @@ export default function LessonCreateScreen({ navigation, route }) {
         if (status !== "granted") {
           const req = await ImagePicker.requestMediaLibraryPermissionsAsync();
           if (req.status !== "granted") {
-            Alert.alert("권한 거부", "사진 접근 권한이 필요합니다.");
+            showAlert("권한 거부", "사진 접근 권한이 필요합니다.");
             return;
           }
         }
@@ -139,7 +167,7 @@ export default function LessonCreateScreen({ navigation, route }) {
         setThumbnail(uri);
       }
     } catch (e) {
-      Alert.alert("오류", "이미지 선택 중 오류가 발생했습니다.");
+      showAlert("오류", "이미지 선택 중 오류가 발생했습니다.");
     }
   };
 
