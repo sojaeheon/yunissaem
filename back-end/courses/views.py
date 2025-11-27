@@ -113,7 +113,7 @@ def course_list_by_category(request, category_id):
 @csrf_exempt
 @api_view(['POST'])
 def create_course(request):
-    serializer = CourseCreateSerializer(data=request.data)
+    serializer = CourseCreateSerializer(data=request.data, files=request.FILES)
 
     if serializer.is_valid():
         course = serializer.save()

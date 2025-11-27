@@ -54,16 +54,21 @@ class CourseCreateSerializer(serializers.ModelSerializer):
             "tutor",
             "category",
             "title",
-            "thumbnail_image_url",
+            "thumbnail",
             "description",
             "curriculum",
             "max_tutees"
         ]
 
     def create(self, validated_data):
-        # 기본 이미지
-        if not validated_data.get("thumbnail_image_url"):
-            validated_data["thumbnail_image_url"] = "https://i.imgur.com/C9Z9Z3O.png"
+
+        # 기본 이미지 지정 (썸네일 없을 경우)
+        if not validated_data.get("thumbnail"):
+            from django.core.files.base import ContentFile
+
+            default_image_path = "static/default_course.jpg"  # 직접 넣을 기본 이미지
+            with open(default_image_path, "rb") as f:
+                validated_data["thumbnail"] = ContentFile(f.read(), name="default.jpg")
 
         return Course.objects.create(**validated_data)
 
