@@ -98,24 +98,23 @@ export default function CategoryLessonScreen({ navigation, route }) {
 
         // 카테고리 지정된 경우
         if (category !== "전체" && categoryId) {
-          endpoint = `${BASE_URL}/courses/category/${categoryId}/${sortParam}`;
+          endpoint = `${BASE_URL}/courses/category/${categoryId}${sortParam}`;
         }
         // 전체(기본값)일 경우 → /my/home/에서 인기 강의만 뽑기
         else {
           endpoint = `${BASE_URL}/my/home/`;
         }
 
+        // 백엔드 수정 시 위 코드 제거 후 이 코드 활성화
+        // endpoint = `${BASE_URL}/courses/category/${categoryId}/${sortParam}`;
+
         const res = await axios.get(endpoint);
-        let data = [];
+        let data = res.data.courses ?? [];
 
         // category별 API가 없으면 /my/home/의 popular_courses 사용
+        // 백엔드 수정 시 이 부분 제거
         if (category === "전체" || !categoryId) {
           data = res.data.popular_courses ?? [];
-        } else {
-          // category API 응답이 리스트 형식이라면 바로 사용
-          data = Array.isArray(res.data)
-            ? res.data
-            : res.data.results ?? [];
         }
         
         // 서버 응답 데이터 정규화
