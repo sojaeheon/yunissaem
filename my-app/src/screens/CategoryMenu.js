@@ -26,6 +26,7 @@ const STATIC_CATEGORIES = [
   { id: 4, name: "프로그래밍", icon: "💻" },
   { id: 5, name: "금융/재테크", icon: "💰" },
   { id: 6, name: "외국어", icon: "🌍" },
+  { id: 7, name: "기타", icon: "📦" },
 ];
 
 export default function CategoryMenu({ visible, onClose, navigation }) {
