@@ -1,10 +1,10 @@
 import { View, Text, Button, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { removeTokens } from "../utils/tokenStorage";
 
 export default function MyPageScreen({ navigation }) {
   return (
     <View style={styles.container}>
-      {/* 프로필 */}
       <View style={styles.profile}>
         <Image
           source={{ uri: "https://placekitten.com/100/100" }}
@@ -21,7 +21,6 @@ export default function MyPageScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* 메뉴 아이콘 영역 */}
       <View style={styles.menuRow}>
         <TouchableOpacity
           style={styles.menuItem}
@@ -68,7 +67,13 @@ export default function MyPageScreen({ navigation }) {
 
       {/* 로그아웃 */}
       <View style={{ marginTop: 30 }}>
-        <Button title="로그아웃" onPress={() => navigation.replace("Login")} />
+        <Button
+          title="로그아웃"
+          onPress={async () => {
+            await removeTokens();
+            navigation.replace("Login"); // 로그인 화면으로 이동
+          }}
+        />
       </View>
     </View>
   );
