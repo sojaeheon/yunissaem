@@ -1,7 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons"; // 아이콘 패키지
 import { TouchableOpacity, View } from "react-native";
 
 // Screens
@@ -101,10 +101,16 @@ export default function RootNavigator() {
         />
 
         {/* Extra Screens */}
-        <Stack.Screen name="LessonCreate" component={LessonCreateScreen} />
         <Stack.Screen name="CategoryLesson" component={CategoryLessonScreen} />
         <Stack.Screen name="LessonDetail" component={LessonDetailScreen} />
-        <Stack.Screen name="AIChatbot" component={AIChatbotScreen} />
+        <Stack.Screen
+          name="AIChatbot"
+          component={AIChatbotScreen}
+          options={{
+            presentation: "transparentModal", // 투명 배경 허용 -> 아래 화면이 보임
+            headerShown: false,
+          }}
+        />
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="ReviewWrite" component={ReviewWriteScreen} />
         <Stack.Screen name="Intro" component={IntroScreen} />
