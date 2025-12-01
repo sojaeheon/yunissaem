@@ -5,10 +5,6 @@
 
   - 카테고리별 조회 시: /courses/category/{category_id}/
 
-  - 전체 보기 시: /my/home/ → popular_courses 데이터를 사용합니다.
-
-  - 위 내용들은 카테고리 api가 생성되면 교체 예정
-
   [지원 기능]
   - 정렬 옵션: 최신순 / 인기순 / 리뷰 많은 순
 
@@ -96,26 +92,10 @@ export default function CategoryLessonScreen({ navigation, route }) {
         else if (sortOption === "리뷰 많은 순") sortParam = "?sort=review";
         else sortParam = ""; // 최신순 → 쿼리 없음
 
-        // 카테고리 지정된 경우
-        if (category !== "전체" && categoryId) {
-          endpoint = `${BASE_URL}/courses/category/${categoryId}${sortParam}`;
-        }
-        // 전체(기본값)일 경우 → /my/home/에서 인기 강의만 뽑기
-        else {
-          endpoint = `${BASE_URL}/my/home/`;
-        }
-
-        // 백엔드 수정 시 위 코드 제거 후 이 코드 활성화
-        // endpoint = `${BASE_URL}/courses/category/${categoryId}/${sortParam}`;
+        endpoint = `${BASE_URL}/courses/category/${categoryId}/${sortParam}`;
 
         const res = await axios.get(endpoint);
         let data = res.data.courses ?? [];
-
-        // category별 API가 없으면 /my/home/의 popular_courses 사용
-        // 백엔드 수정 시 이 부분 제거
-        if (category === "전체" || !categoryId) {
-          data = res.data.popular_courses ?? [];
-        }
         
         // 서버 응답 데이터 정규화
         const normalized = data.map((item) => {
@@ -387,7 +367,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
 
           {dropdownVisible && (
             <View style={styles.dropdownMenu}>
-              {["인기순", "최신순", "리뷰 많은 순"].map((opt) => (
+              {["최신순", "인기순", "리뷰 많은 순"].map((opt) => (
                 <TouchableOpacity
                   key={opt}
                   onPress={() => {
