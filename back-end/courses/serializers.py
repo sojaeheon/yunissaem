@@ -30,6 +30,8 @@ class CourseListSerializer(serializers.ModelSerializer):
     # category 이름 불러오기
     category_name = serializers.CharField(source='category.name', read_only=True)
 
+    thumbnail_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
         fields = [
@@ -46,11 +48,23 @@ class CourseListSerializer(serializers.ModelSerializer):
             'created_at',           # 등록일
         ]
 
+    def get_thumbnail_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.thumbnail_image_url:
+            url = obj.thumbnail_image_url.url
+        else:
+            url = "/static/default.jpg"
+        
+        if request:
+            return request.build_absolute_uri(url)
+        return url
+
 
 # =========================================================
 # ✅ 과외 생성 Serializer 
 # =========================================================
 class CourseCreateSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = Course
         fields = [
@@ -62,13 +76,6 @@ class CourseCreateSerializer(serializers.ModelSerializer):
             "curriculum",
             "max_tutees"
         ]
-
-    def create(self, validated_data):
-        if "thumbnail_image_url" not in validated_data or not validated_data["thumbnail_image_url"]:
-            default_image_path = os.path.join(settings.STATICFILES_DIRS[0], "default.jpg")
-            with open(default_image_path, "rb") as f:
-                validated_data["thumbnail_image_url"] = ContentFile(f.read(), name="default.jpg")
-        return Course.objects.create(**validated_data)
 
 
 

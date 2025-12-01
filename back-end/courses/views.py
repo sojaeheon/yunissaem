@@ -8,10 +8,11 @@ from rest_framework import status
 from .models import Course, WishedCourses, Category
 from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer
 from accounts.models import User
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 # 검색 조회 api
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def search_courses(request):
     """
     🔍 과외 검색 API

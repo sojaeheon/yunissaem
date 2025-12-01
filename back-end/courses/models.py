@@ -75,6 +75,7 @@ class Course(models.Model):
     review_count = models.IntegerField(default=0)
     average_rating = models.FloatField(default=0.0)
     popularity_score = models.FloatField(default=0.0)
+    
 
     # print 함수 실행시 '[강사명]: 강좌명' 반환
     def __str__(self):
