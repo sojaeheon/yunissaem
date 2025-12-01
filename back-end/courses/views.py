@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.db.models import Q
 from django.utils import timezone
@@ -8,7 +8,7 @@ from rest_framework import status
 from .models import Course, WishedCourses, Category
 from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer
 from accounts.models import User
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import IsAuthenticated
 
 # 검색 조회 api
 @api_view(['GET'])
@@ -72,7 +72,12 @@ def course_list_by_category(request, category_id):
     """
     
     try:
-        category = Category.objects.get(id=category_id)
+        if category_id == 0:
+            courses = Course.objects.all()
+        else:
+            # 🔹 해당 카테고리의 활성화된 과외만 조회
+            category = Category.objects.get(id=category_id)
+            courses = Course.objects.filter(category=category)
     except Category.DoesNotExist:
         return Response(
             {"error": "해당 카테고리를 찾을 수 없습니다."},
@@ -87,8 +92,6 @@ def course_list_by_category(request, category_id):
     # 🔸 정렬 파라미터 (기본값: latest)
     sort = request.GET.get('sort', 'latest')
     
-    # 🔹 해당 카테고리의 활성화된 과외만 조회
-    courses = Course.objects.filter(category=category)
 
     # ✅ 정렬 조건 분기
     if sort == 'popular':
@@ -110,10 +113,13 @@ def course_list_by_category(request, category_id):
         "courses": serializer.data
     })
 
-@csrf_exempt
+#####################
+# 과외 생성 API
+#####################
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_course(request):
-    serializer = CourseCreateSerializer(data=request.data, files=request.FILES)
+    serializer = CourseCreateSerializer(data=request.data)
 
     if serializer.is_valid():
         course = serializer.save()
