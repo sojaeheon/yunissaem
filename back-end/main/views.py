@@ -13,22 +13,16 @@ from courses.selector import get_new_courses, get_popular_courses
 @api_view(['GET'])
 def home_view(request):
 
-    """
-    임시 테스트용 API: 로그인 기능 구현 전, ID가 1인 유저가 로그인한 것처럼 가정
-    """
-    # --- 테스트용 임시 코드 ---
-    # 실제 로그인 기능이 없으므로, 테스트용 유저를 DB에서 직접 가져옴
-    # ※※※실제 배포 시에는 이 코드를 반드시 삭제※※※
-    try:
-        # ID가 1인 유저를 'testuser'라고 가정
-        user = User.objects.get(id=1)
-    except User.DoesNotExist:
-        return Response({"error": "테스트용 유저(id=1)가 DB에 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+    user = request.user
 
-    # request.user에 강제로 할당하여 마치 로그인된 것처럼 만듭니다.
-    request.user = user
-    # --- 임시 코드 끝 ---
-    
+    # [테스트용 로직] 토큰은 없지만, 개발자가 강제로 보고 싶을 때 (?user_id=1)
+    # 실제 배포 시에는 제거하거나 주석 처리
+    if not user.is_authenticated and request.query_params.get('user_id'):
+        try:
+            test_user_id = request.query_params.get('user_id')
+            user = User.objects.get(id=test_user_id)
+        except (User.DoesNotExist, ValueError):
+            pass # 유저 못 찾으면 그냥 비로그인 상태로 유지
 
     # 인기, 신규, 찜, 수강중 과외 
     courses = {
@@ -38,6 +32,9 @@ def home_view(request):
         'my_attending_courses': get_attending_courses(user, limit=10), # 수강중 과외 10개
     }
 
-    response_data = {key: CourseListSerializer(value, many=True).data for key, value in courses.items()}
+    response_data = {
+        key: CourseListSerializer(value, many=True).data 
+        for key, value in courses.items()
+    }
 
-    return Response(response_data)
+    return Response(response_data, status=status.HTTP_200_OK)
