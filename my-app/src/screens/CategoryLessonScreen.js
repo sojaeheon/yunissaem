@@ -41,6 +41,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { Ionicons } from "@expo/vector-icons";
+import api from "../utils/axiosInstance";
 import axios from "axios";
 import { BASE_URL, SERVER_BASE } from "../config/config";
 import CategoryMenu from "../screens/CategoryMenu";
@@ -94,7 +95,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
 
         endpoint = `${BASE_URL}/courses/category/${categoryId}/${sortParam}`;
 
-        const res = await axios.get(endpoint);
+        const res = await api.get(endpoint);
         let data = res.data.courses ?? [];
         
         // 서버 응답 데이터 정규화
