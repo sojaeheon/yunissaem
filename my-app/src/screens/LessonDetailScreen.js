@@ -40,6 +40,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
+import api from "../utils/axiosInstance";
 import { BASE_URL } from "../config/config";
 
 export default function LessonDetailScreen({ navigation, route }) {
@@ -63,7 +64,7 @@ export default function LessonDetailScreen({ navigation, route }) {
   const fetchLessonDetail = async () => {
     try {
       // /courses/{id}/ 에 GET 요청 보내기
-      const response = await axios.get(`${BASE_URL}/courses/${courseId}/`);
+      const response = await api.get(`${BASE_URL}/courses/${courseId}/`);
       const detail = response.data;
 
       // 화면에서 사용할 전체 데이터 저장
@@ -85,7 +86,7 @@ export default function LessonDetailScreen({ navigation, route }) {
   const toggleWish = async () => {
     try {
       // /courses/{id}/wish/ 엔드포인트에 POST로 토글 요청
-      const res = await axios.post(`${BASE_URL}/courses/${courseId}/wish/`);
+      const res = await api.post(`${BASE_URL}/courses/${courseId}/wish/`);
       // 서버에서 내려준 최신 is_wished 값을 그대로 반영
       setIsWished(res.data.is_wished);
       // 사용자에게 결과 메시지 보여주기
@@ -108,7 +109,7 @@ export default function LessonDetailScreen({ navigation, route }) {
     const nextStatus = data.status === "recruiting" ? "in_progress" : "recruiting";
 
     try {
-      const res = await axios.patch(`${BASE_URL}/courses/${courseId}/status/`, {
+      const res = await api.patch(`${BASE_URL}/courses/${courseId}/status/`, {
         status: nextStatus,
       });
 
@@ -130,7 +131,7 @@ export default function LessonDetailScreen({ navigation, route }) {
     if (!data) return;
 
     try {
-      const res = await axios.patch(`${BASE_URL}/courses/${courseId}/status/`, {
+      const res = await api.patch(`${BASE_URL}/courses/${courseId}/status/`, {
         status: "finished",
       });
 
