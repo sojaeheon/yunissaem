@@ -77,8 +77,6 @@ class CourseCreateSerializer(serializers.ModelSerializer):
             "max_tutees"
         ]
 
-
-
 # 튜터 프로필 표시용
 class TutorSerializer(serializers.ModelSerializer):
     class Meta:
