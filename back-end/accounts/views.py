@@ -1,13 +1,15 @@
 # users/views.py
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from courses.serializers import CourseListSerializer
-from accounts.models import User # User 모델 임포트
-from accounts.selector import get_wishlist_courses, get_attending_courses
-from courses.selector import get_new_courses, get_popular_courses
+from .serializers import UserRegisterSerializer
+# from courses.serializers import CourseListSerializer
+# from accounts.models import User # User 모델 임포트
+# from accounts.selector import get_wishlist_courses, get_attending_courses
+# from courses.selector import get_new_courses, get_popular_courses
 
-
+'''
 # 홈화면 (로그인 기능 없을 때 테스트용)
 # 추후 permission_classes도 수정
 @api_view(['GET'])
@@ -51,3 +53,23 @@ def home_view(request):
     response_data = {key: CourseListSerializer(value, many=True).data for key, value in courses.items()}
 
     return Response(response_data)
+'''
+    
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_view(request):
+    serializer = UserRegisterSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        user = serializer.save()
+        
+        return Response(
+            {
+                "message": "회원가입 성공",
+                "user": serializer.data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+        # 실패 시 에러 메시지 반환
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

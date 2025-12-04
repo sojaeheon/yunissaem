@@ -19,13 +19,14 @@ import { Ionicons } from "@expo/vector-icons"; // 아이콘 컴포넌트 (X 버�
 
 // 고정 카테고리 데이터 (프론트 상수)
 const STATIC_CATEGORIES = [
-  { id: 1, name: "전체", icon: "📚" },
-  { id: 2, name: "음악", icon: "🎵" },
-  { id: 3, name: "운동", icon: "🏃" },
-  { id: 4, name: "예술", icon: "🎨" },
-  { id: 5, name: "프로그래밍", icon: "💻" },
-  { id: 6, name: "금융/재테크", icon: "💰" },
-  { id: 7, name: "외국어", icon: "🌍" },
+  { id: 0, name: "전체", icon: "📚" },
+  { id: 1, name: "음악", icon: "🎵" },
+  { id: 2, name: "운동", icon: "🏃" },
+  { id: 3, name: "예술", icon: "🎨" },
+  { id: 4, name: "프로그래밍", icon: "💻" },
+  { id: 5, name: "금융/재테크", icon: "💰" },
+  { id: 6, name: "외국어", icon: "🌍" },
+  { id: 7, name: "기타", icon: "📦" },
 ];
 
 export default function CategoryMenu({ visible, onClose, navigation }) {

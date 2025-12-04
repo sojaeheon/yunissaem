@@ -2,6 +2,9 @@ from rest_framework import serializers
 from .models import Course, Category
 from accounts.models import User
 from reviews.serializers import ReviewSerializer
+from django.conf import settings
+from django.core.files.base import ContentFile
+import os
 
 
 
@@ -27,6 +30,8 @@ class CourseListSerializer(serializers.ModelSerializer):
     # category 이름 불러오기
     category_name = serializers.CharField(source='category.name', read_only=True)
 
+    thumbnail_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
         fields = [
@@ -43,11 +48,23 @@ class CourseListSerializer(serializers.ModelSerializer):
             'created_at',           # 등록일
         ]
 
+    def get_thumbnail_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.thumbnail_image_url:
+            url = obj.thumbnail_image_url.url
+        else:
+            url = "/static/default.jpg"
+        
+        if request:
+            return request.build_absolute_uri(url)
+        return url
+
 
 # =========================================================
 # ✅ 과외 생성 Serializer 
 # =========================================================
 class CourseCreateSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = Course
         fields = [
@@ -59,13 +76,6 @@ class CourseCreateSerializer(serializers.ModelSerializer):
             "curriculum",
             "max_tutees"
         ]
-
-    def create(self, validated_data):
-        # 기본 이미지
-        if not validated_data.get("thumbnail_image_url"):
-            validated_data["thumbnail_image_url"] = "https://i.imgur.com/C9Z9Z3O.png"
-
-        return Course.objects.create(**validated_data)
 
 
 

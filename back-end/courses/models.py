@@ -45,7 +45,7 @@ class Course(models.Model):
     
     # 기본 정보 - introduction, curriculum은 긴 글을 포함하므로 TextField
     title = models.CharField(max_length=200, null=False)
-    thumbnail_image_url = models.URLField(max_length=500,blank=True, null=False)   # default를 지정해주는 게 낫겠다
+    thumbnail_image_url = models.ImageField(upload_to="thumbnails/",blank=True, null=True)   # default를 지정해주는 게 낫겠다
     description = models.TextField(null=False) # 비어있어도 상관 없을듯
     curriculum = models.TextField(null=False)   # 비어있으면 안 됨 - 게시글 만들기를 위한 서드파티를 사용해야함 <ckeditor>
     # price = models.PositiveIntegerField(null=False)
@@ -75,6 +75,7 @@ class Course(models.Model):
     review_count = models.IntegerField(default=0)
     average_rating = models.FloatField(default=0.0)
     popularity_score = models.FloatField(default=0.0)
+    
 
     # print 함수 실행시 '[강사명]: 강좌명' 반환
     def __str__(self):

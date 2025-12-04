@@ -28,6 +28,7 @@ import {
     SectionList,
 } from "react-native";
 import axios from "axios";
+import api from "../utils/axiosInstance";
 import CategoryMenu from "../screens/CategoryMenu";
 import { BASE_URL, SERVER_BASE } from "../config/config";
 import { useFocusEffect } from "@react-navigation/native";
@@ -101,7 +102,7 @@ export default function HomeScreen({ navigation, route }) {
       setLoadingNew(true);
       setLoadingMyData(true);
       try {
-        const res = await axios.get(`${BASE_URL}/home/`);
+        const res = await api.get(`${BASE_URL}/home/`);
         const data = res.data;
 
         setPopularCourses(normalizeResponse(data.popular_courses));
