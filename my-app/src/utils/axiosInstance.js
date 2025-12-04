@@ -9,7 +9,7 @@
   - Access/Refresh 토큰은 expo-secure-store(tokenStorage.js)에서 안전하게 로드/저장/삭제되며,
     Refresh Token이 만료된 경우 removeTokens()를 실행하여 완전 로그아웃 처리합니다.
 
-  - refresh API는 BASE_URL/token/refresh/로 요청되며,
+  - refresh API는 BASE_URL/my/token/refresh/로 요청되며,
     백엔드는 { access: "...", refresh: "..."} 형태의 JWT Pair 구조를 반환한다고 가정합니다.
 
   - 이 파일 덕분에 개별 화면에서는 Authorization 헤더를 직접 신경 쓰지 않아도 되며,
@@ -68,7 +68,7 @@ api.interceptors.response.use(
 
       try {
         // Refresh Token으로 Access 재발급
-        const res = await axios.post(`${BASE_URL}/token/refresh/`, {
+        const res = await axios.post(`${BASE_URL}/my/token/refresh/`, {
           refresh,
         });
 
