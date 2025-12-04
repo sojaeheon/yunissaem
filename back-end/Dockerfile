@@ -1,5 +1,5 @@
 # 기본 이미지 설정
-FROM python:3.11-slim
+FROM python:3.11
 
 # 환경 변수 설정
 # 이 설정은 Python 이 .pyc 파일(파이썬 바이트코드 파일)을 생성하지 않도록 한다
@@ -18,10 +18,29 @@ ENV PYTHONUNBUFFERED 1
 # 작업 디렉터리 설정
 WORKDIR /app
 
-# 의존성 파일 복사 및 설치
-COPY requirements.txt /app/
+# PostgreSQL 빌드 필요한 패키지 설치
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# # 의존성 파일 복사 및 설치
+# COPY requirements.txt /app/
+
+# # entrypoint.sh 복사 및 실행 권한 부여
+# COPY entrypoint.sh /app/entrypoint.sh
 
 # 프로젝트 파일 복사
 COPY . /app/
+
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 8000
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+
+

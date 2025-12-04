@@ -5,9 +5,9 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/courses/', include('courses.urls')),
-    path('api/my/', include('accounts.urls')),
-    path('api/home/', include('main.urls')),
+    path('courses/', include('courses.urls')),
+    path('my/', include('accounts.urls')),
+    path('home/', include('main.urls')),
 ]
 
 # 기본 이미지(static/default.jpg)와 업로드 이미지(media/tumbnails/)를 구분
