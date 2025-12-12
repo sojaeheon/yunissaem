@@ -1,10 +1,14 @@
 # services : 실행하려는 컨테이너들을 정의한다.
 # web(Django), db(PostgreSQL), redis,nginx 4개의 서비스
 services:
-  # api 컨테이너
-  api:
+  ###################################
+  # BACKEND – Django REST API
+  ###################################
+  backend:
     # ./api 디렉터리의 Dockerfile을 사용하여 이미지를 빌드한다
     build: ./back-end
+    
+    container_name : yunissaem-backend
     
     # 컨테이너가 실행될 때 수행할 명령어
     # Gunicorn을 사용하여 Django 애플리케이션을 실행합니다.
@@ -15,6 +19,8 @@ services:
     # 코드 변경 시 컨테이너를 다시 빌드할 필요가 없다
     volumes:
       - ./back-end:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
     
     # 8000번 포트를 다른 컨테이너에 노출시킨다.
     # Nginx가 이 포트로 요청을 전달한다.
@@ -24,55 +30,79 @@ services:
 
     # db와 redis 서비스가 먼저 실행되도록 의존성을 설정합니다.
     depends_on:
-      - nginx
-    #   - db
-    #   - redis
-    
+      - postgres
+      - redis
+      
     # Django 애플리케이션이 데이터베이스에 연결하는데 필요한 환경변수들을 설정
-    # environment:
-    #   - POSTGRES_NAME=postgres
-    #   - POSTGRES_USER=postgres
-    #   - POSTGRES_PASSWORD=postgres
-    #   - POSTGRES_HOST=db
-    #   - POSTGRES_PORT=5432
+    environment:
+      DJANGO_SETTINGS_MODULE: yunissaem_api.settings
 
-  # DB 컨테이너
-  # db:
-  #   # Dockerhub의 공식 PostgreSQL 13이미지를 사용
-  #   image: postgres:13
-    
-  #   # postgres_data라는 볼륨을 생성하여 데이터베이스 데이터베이스 데이터를 영속적으로 저장합니다.
-  #   # 컨테이너가 종료되어도 데이터가 유지됩니다.
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data/
-    
-  #   # PostgreSQL 데이터베이스를 초기화하기 위한 환경변수
-  #   environment:
-  #     - POSTGRES_DB=postgres
-  #     - POSTGRES_USER=postgres
-  #     - POSTGRES_PASSWORD=postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
 
-  # redis 컨테이너
-  # redis:
-  #   # 경량화된 Redis 이미지를 사용
-  #   image: redis:alpine
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+    networks:
+      - yuninet
+
+  ###################################
+  # PostgreSQL
+  ###################################
+  postgres:
+    image: postgres:15
+    container_name: yunissaem-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - yuninet
+
+  ###################################
+  # Redis – 로그인 세션 / 채팅 큐
+  ###################################
+  redis:
+    image: redis:7
+    container_name: yunissaem-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - yuninet
   
 
-  # nginx 컨테이너
-  nginx:
-    # ./nginx 디렉터리의 Dockerfile(또는 설정 파일)을 사용하여 Nginx를 구성
-    build: ./nginx
 
-    # 호스트의 80번 포트를 컨테이너의 80번 포트와 연결하여 외부 요청을 받을 수 있게 한다
+  # nginx 컨테이너
+  ###################################
+  # NGINX – API Reverse Proxy
+  ###################################
+  nginx:
+    container_name: yunissaem-nginx
+    build:
+      context: ./nginx
     ports:
       - "80:80"
-    
-    # api 서비스가 실행된 후에 nginx 서비스가 실행된다.
-    # depends_on:
-    #   - api
+    depends_on:
+      - backend
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    networks:
+      - yuninet
 
 # postgres_data볼륨을 명시적으로 정의한다
 # "우리 프로젝트는 postgres_data라는 이름의 데이터 저장 공간을 공식적으로 사용할거야"
 # 라고 선언하고 등록하는 것과 같다.
-# volumes:
-#   postgres_data:
+volumes:
+  pgdata:
+  static_volume:
+  media_volume:
+
+networks:
+  yuninet:
