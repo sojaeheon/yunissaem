@@ -16,6 +16,7 @@ django.setup()
 # -----------------------------------------------------------------------------
 from accounts.models import User
 from courses.models import Course, Category, WishedCourses, Enrollment
+from chattings.models import ChatRoom, Message
 # from reviews.models import Review  # 리뷰 모델 있으면 활성화
 
 # -----------------------------------------------------------------------------
@@ -29,7 +30,8 @@ CATEGORIES_CSV_PATH = os.path.join(DATA_DIR, "categories.csv")
 COURSES_CSV_PATH = os.path.join(DATA_DIR, "courses.csv")
 WISHED_CSV_PATH = os.path.join(DATA_DIR, "wished_courses.csv")
 ENROLLMENT_CSV_PATH = os.path.join(DATA_DIR, "enrollment.csv")
-
+CHATROOMS_CSV_PATH = os.path.join(DATA_DIR, 'chatrooms.csv')
+MESSAGES_CSV_PATH = os.path.join(DATA_DIR, 'messages.csv')
 
 # -----------------------------------------------------------------------------
 # 출력 컬러 유틸
@@ -50,7 +52,8 @@ def clear_data():
     Course.objects.all().delete()
     Category.objects.all().delete()
     User.objects.all().delete()
-
+    Message.objects.all().delete()
+    ChatRoom.objects.all().delete()
     print_success("데이터 초기화 완료.")
 
 
@@ -180,6 +183,74 @@ def update_cached_fields():
         course.update_tutee_count()
     print_success("캐싱 필드 업데이트 완료.")
 
+# -----------------------------------------------------------------------------
+# 채팅
+# -----------------------------------------------------------------------------
+def seed_chatrooms(file_path):
+    """chatrooms.csv 파일에서 채팅방 데이터를 생성합니다."""
+    print("\n📌 채팅방(ChatRoom) 생성 시작...")
+
+    with open(file_path, mode='r', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            try:
+                # update_or_create 사용 → seed 재실행 시 중복 방지
+                ChatRoom.objects.update_or_create(
+                    id=row['id'],
+                    defaults={
+                        'courses_id': row['courses_id'],
+                        'tutor_id': row['tutor_id'],
+                        'tutee_id': row['tutee_id'],
+                        'created_at': row['created_at'],
+                    }
+                )
+            except IntegrityError:
+                # FK 문제 또는 unique_together 충돌 시 발생
+                print_warning(
+                    f"⚠ 채팅방 ID {row['id']} 생성 중 무결성 오류 발생. 건너뜁니다."
+                )
+            except Exception as e:
+                print_error(
+                    f"❌ 채팅방 ID {row['id']} 생성 중 오류: {e}"
+                )
+
+    print_success("✅ 채팅방 생성 완료.")
+
+def seed_messages(file_path):
+    """messages.csv 파일에서 메시지 데이터를 생성합니다."""
+    print("\n📌 메시지(Message) 생성 시작...")
+
+    with open(file_path, mode='r', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            try:
+                # 문자열 "true"/"false" → boolean 변환
+                is_read_value = str(row['is_read']).lower() == 'true'
+
+                # update_or_create → 재실행 시 중복 방지
+                Message.objects.update_or_create(
+                    id=row['id'],
+                    defaults={
+                        'chatroom_id': row['chatroom_id'],
+                        'sender_id': row['sender_id'],
+                        'content': row['content'],
+                        'is_read': is_read_value,
+                        'created_at': row['created_at'],
+                    }
+                )
+            except IntegrityError:
+                print_warning(
+                    f"⚠ 메시지 ID {row['id']} 생성 중 무결성 오류. FK 확인 필요."
+                )
+            except Exception as e:
+                print_error(
+                    f"❌ 메시지 ID {row['id']} 생성 중 오류: {e}"
+                )
+
+    print_success("✅ 메시지 생성 완료.")
+
 
 # -----------------------------------------------------------------------------
 # MAIN
@@ -190,6 +261,8 @@ if __name__ == "__main__":
     seed_users(USERS_CSV_PATH)
     seed_categories(CATEGORIES_CSV_PATH)
     seed_courses(COURSES_CSV_PATH)
+    seed_chatrooms(CHATROOMS_CSV_PATH)
+    seed_messages(MESSAGES_CSV_PATH)
     seed_m2m(WISHED_CSV_PATH, WishedCourses)
     seed_m2m(ENROLLMENT_CSV_PATH, Enrollment)
 

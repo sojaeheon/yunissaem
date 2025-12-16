@@ -8,6 +8,7 @@ urlpatterns = [
     path('courses/', include('courses.urls')),
     path('my/', include('accounts.urls')),
     path('home/', include('main.urls')),
+    path("chat/", include("chattings.urls")),
 ]
 
 # 기본 이미지(static/default.jpg)와 업로드 이미지(media/tumbnails/)를 구분
