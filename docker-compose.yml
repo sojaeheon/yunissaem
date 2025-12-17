@@ -96,6 +96,26 @@ services:
     networks:
       - yuninet
 
+  # frontend 컨테이너 (React Native / Expo)
+  frontend:
+    build: ./my-app
+    volumes:
+      - ./my-app:/app
+      - /app/node_modules
+    ports:
+      - "19000:19000"   # Metro bundler (Expo)
+      - "19001:19001"   # Expo DevTools
+      - "19006:19006"   # Expo web
+      - "8081:8081"     # Metro web fallback
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - HOST=0.0.0.0
+    stdin_open: true
+    tty: true
+    networks:
+      - yuninet
+      
+
 # postgres_data볼륨을 명시적으로 정의한다
 # "우리 프로젝트는 postgres_data라는 이름의 데이터 저장 공간을 공식적으로 사용할거야"
 # 라고 선언하고 등록하는 것과 같다.
