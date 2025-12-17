@@ -10,10 +10,11 @@
 // ⚠️ 주의: IP 변경 시 서버 재시작 필요
 // ⚠️ 주의: 배포 시에는 고정 IP 또는 도메인 사용 권장
 // ⚠️ 주의: 커밋 시 본인 IP가 노출되지 않도록 주의
-export const PC_IP = "";
+export const PC_IP = "localhost";
 
 // API 엔드포인트 기본 주소
-export const BASE_URL = `http://${PC_IP}:8000/api`;
+// Note: nginx proxies '/' to the Django api, so the API root is at '/'
+export const BASE_URL = `http://${PC_IP}:80`;
 
 // 이미지·파일 등 상대경로 보정용
-export const SERVER_BASE = `http://${PC_IP}:8000`;
+export const SERVER_BASE = `http://${PC_IP}:80`;

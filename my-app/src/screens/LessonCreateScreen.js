@@ -15,6 +15,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
+import { BASE_URL } from "../config/config";
+import { getAccessToken } from "../utils/tokenStorage";
 
 export default function LessonCreateScreen({ navigation, route }) {
   // ===== State 관리 =====
@@ -29,12 +31,13 @@ export default function LessonCreateScreen({ navigation, route }) {
   
   // ===== 카테고리 목록 (고정 데이터) =====
   const categories = [
-    { id: 2, name: "음악" },
-    { id: 3, name: "운동" },
-    { id: 4, name: "예술" },
-    { id: 5, name: "프로그래밍" },
-    { id: 6, name: "금융/재테크" },
-    { id: 7, name: "외국어" },
+    { id: 1, name: "음악" },
+    { id: 2, name: "운동" },
+    { id: 3, name: "예술" },
+    { id: 4, name: "프로그래밍" },
+    { id: 5, name: "금융/재테크" },
+    { id: 6, name: "외국어" },
+    { id: 7, name: "기타" },
   ];
 
   // ===== 플랫폼별 Alert 처리 함수 =====
@@ -110,30 +113,97 @@ export default function LessonCreateScreen({ navigation, route }) {
       // 2. 플랫폼별 API URL 설정
       // Android 에뮬레이터: 10.0.2.2 (로컬호스트 주소)
       // 그 외: localhost
-      const API_BASE_URL =
-        Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://localhost:8000";
-      const endpoint = `${API_BASE_URL}/api/courses/create/`;
+      const apiBase = Platform.OS === "android" ? "http://10.0.2.2:80" : BASE_URL;
+      const endpoint = `${apiBase}/courses/create/`;
 
-      // 3. FormData 생성 (백엔드로 전송할 데이터)
+      // Auth 토큰 가져오기
+      const access = await getAccessToken();
+      if (!access) {
+        setLoading(false);
+        showAlert("인증 필요", "로그인 후 시도하세요.");
+        return;
+      }
+
+      // JWT 페이로드에서 사용자 id 파싱 (프론트 전용 해결)
+      const parseJwt = (token) => {
+        try {
+          const base64Url = token.split('.')[1];
+          if (!base64Url) return null;
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+          let jsonPayload = '';
+          if (typeof atob === 'function') {
+            jsonPayload = decodeURIComponent(Array.prototype.map.call(atob(padded), c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+          } else if (typeof Buffer !== 'undefined') {
+            jsonPayload = Buffer.from(padded, 'base64').toString('utf8');
+          } else {
+            return null;
+          }
+          return JSON.parse(jsonPayload);
+        } catch (e) {
+          return null;
+        }
+      };
+
+      const payload = parseJwt(access);
+      if (!payload || (!payload.user_id && !payload.id && !payload.sub)) {
+        setLoading(false);
+        showAlert("오류", "토큰에서 사용자 정보를 추출할 수 없습니다.");
+        return;
+      }
+      // Simple fallback: try common claim names
+      const tutorId = payload.user_id ?? payload.id ?? payload.sub;
+
+      const headers = { Accept: "application/json" };
+      headers.Authorization = `Bearer ${access}`;
+
+      // FormData 생성 (tutor에 파싱한 id 사용)
       const form = new FormData();
-      form.append("tutor", "1"); // 튜터 ID (임시: 실제로는 로그인한 사용자 ID)
-      form.append("category", String(categoryId)); // 카테고리 ID
-      form.append("title", title); // 제목
-      form.append("description", intro || ""); // 강의 소개
-      form.append("curriculum", curriculum || ""); // 커리큘럼
+      form.append("tutor", String(tutorId));
+      form.append("category", String(categoryId));
+      form.append("title", title);
+      form.append("description", intro || "");
+      form.append("curriculum", curriculum || "");
       form.append("max_tutees", String(parseInt(capacity, 10) || 1)); // 최대 인원
 
-      // 썸네일이 선택되었으면 기본 이미지 URL 추가
-      // (실제 파일 업로드는 미지원, URL만 전송)
+      // 썸네일 이미지 파일 추가 (ImageField로 변경됨)
       if (thumbnail) {
-        form.append("thumbnail_image_url", "https://i.imgur.com/C9Z9Z3O.png");
+        const uriParts = thumbnail.split('/');
+        const fileName = uriParts[uriParts.length - 1].split('?')[0] || 'photo.jpg';
+        const match = /\.(\w+)$/.exec(fileName);
+        const fileType = match ? `image/${match[1].toLowerCase()}` : 'image/jpeg';
+
+        if (Platform.OS === 'web') {
+          const resp = await fetch(thumbnail);
+          const blob = await resp.blob();
+
+          // blob.type 예: "image/jpeg" → ext = "jpeg" 또는 "jpg"으로 변환
+          let ext = (blob.type || '').split('/')[1] || '';
+          if (ext === 'jpeg') ext = 'jpg';
+          if (!ext) ext = 'jpg';
+
+          // 기존 fileName에 확장자가 없으면 붙임
+          let fileNameWithExt = fileName;
+          if (!/\.\w+$/.test(fileName)) {
+            fileNameWithExt = `photo.${ext}`;
+          }
+
+          form.append('thumbnail_image_url', blob, fileNameWithExt);
+        } else {
+          form.append('thumbnail_image_url', {
+            uri: Platform.OS === 'android' ? thumbnail : thumbnail.replace('file://', ''),
+            name: fileName,
+            type: fileType,
+          });
+        }
       }
 
       // 4. 백엔드 API 호출
+      // multipart/form-data 전송 시 Content-Type 헤더를 직접 설정하지 않음
       const res = await fetch(endpoint, {
         method: "POST",
         body: form,
-        headers: { Accept: "application/json" },
+        headers,
       });
 
       const json = await res.json();
@@ -144,7 +214,14 @@ export default function LessonCreateScreen({ navigation, route }) {
         return;
       }
 
-      // 6. 성공 시 Home 화면으로 이동
+      // 6. 성공 시 폼 초기화 후 Home 화면으로 이동
+      setTitle("");
+      setCapacity("");
+      setTutorIntro("");
+      setIntro("");
+      setCurriculum("");
+      setThumbnail(null);
+      setCategoryId("2");
       navigation.navigate("Home");
       
     } catch (e) {
