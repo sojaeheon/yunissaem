@@ -10,11 +10,6 @@ services:
     
     container_name : yunissaem-backend
     
-    # 컨테이너가 실행될 때 수행할 명령어
-    # Gunicorn을 사용하여 Django 애플리케이션을 실행합니다.
-    # your_project는 실제 프로젝트 이름으로 변경해야한다.
-    command: gunicorn yunissaem_api.wsgi:application --bind 0.0.0.0:8000
-    
     # [./back-end:/app] : 호스트의 ./back-end 디렉터리를 컨테이너의 /app 디렉터리와 동기화한다
     # 코드 변경 시 컨테이너를 다시 빌드할 필요가 없다
     volumes:

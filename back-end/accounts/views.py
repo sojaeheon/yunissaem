@@ -72,4 +72,5 @@ def register_view(request):
         )
 
         # 실패 시 에러 메시지 반환
+    print(serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
