@@ -1,3 +1,4 @@
+django-channels
 asgiref==3.9.1
 certifi==2025.8.3
 cffi==1.17.1

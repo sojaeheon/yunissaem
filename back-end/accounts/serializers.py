@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import TutorProfile    # Tutor 소개 페이지 API 구축
+from courses.models import Course   # 과외 목록 가져오기 위함
 
 User = get_user_model()
 
@@ -61,3 +63,52 @@ class ProfileSerializer(serializers.ModelSerializer):
         if not user.check_password(value):
             raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
         return value
+    
+class TutorIntroductionSerializer(serializers.ModelSerializer):
+    # User 모델에서 가져올 필드
+    name = serializers.ReadOnlyField()
+    profile_image = serializers.ReadOnlyField()
+    
+    # TutorProfile 모델에서 가져올 필드
+    experience = serializers.CharField(source='tutor_profile.experience', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['name', 'profile_image', 'experience']
+    
+# 조회 / 변경 별도 제공 <= 접근 권한이 다르기 때문
+class TutorProfileUpdateSerializer(serializers.ModelSerializer):
+    # User 모델 필드 가져오기
+    name = serializers.CharField(source='user.name', read_only=True) 
+    profile_image = serializers.URLField(source='user.profile_image', required=False)
+    
+    # 튜터 전용 필드 (경력 등)
+    experience = serializers.CharField(required=True)
+    
+    # 검증용 비밀번호
+    current_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = TutorProfile
+        fields = ['name', 'profile_image', 'experience', 'current_password']
+
+    def validate_current_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
+        return value
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop('user', {})
+        user = instance.user
+
+        # 1. User 모델 정보 업데이트 (사진 등)
+        if 'profile_image' in user_data:
+            user.profile_image = user_data.get('profile_image', user.profile_image)
+            user.save()
+
+        # 2. TutorProfile 모델 정보 업데이트 (경력)
+        instance.experience = validated_data.get('experience', instance.experience)
+        instance.save()
+
+        return instance
