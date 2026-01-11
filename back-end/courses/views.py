@@ -5,8 +5,8 @@ from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework import status
-from .models import Course, WishedCourses, Category
-from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer
+from .models import Course, Enrollment, WishedCourses, Category
+from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer,EnrolledCourseListSerializer
 from accounts.models import User
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
@@ -292,3 +292,21 @@ class CourseStatusUpdateView(APIView):
             "message": f"과외 상태가 '{new_status}'로 변경되었습니다.",
             "status": course.status
         }, status=status.HTTP_200_OK)
+
+# 수강중 과외 목록 조회 API
+class EnrolledCourseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        enrollments = (
+            Enrollment.objects
+            .filter(
+                user=request.user,
+                status=Enrollment.StatusChoices.ENROLLED
+            )
+            .select_related("course", "course__tutor", 'course__category')
+            .order_by("-created_at")
+        )
+
+        serializer = EnrolledCourseListSerializer(enrollments, many=True)
+        return Response(serializer.data)

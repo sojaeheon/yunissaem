@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Category
+from .models import Course, Category, Enrollment
 from accounts.models import User
 from reviews.serializers import ReviewSerializer
 from django.conf import settings
@@ -146,3 +146,33 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         if enrollment:
             return enrollment.status
         return None
+
+# 수강중 과외 조회용 Serializer
+class EnrolledCourseListSerializer(serializers.ModelSerializer):
+    course_id = serializers.IntegerField(source='course.id', read_only=True)
+    title = serializers.CharField(source='course.title', read_only=True)
+    tutor_name = serializers.CharField(source='course.tutor.username', read_only=True)
+    category_name = serializers.CharField(source='course.category.name', read_only=True)
+    thumbnail_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Enrollment
+        fields = [
+            'course_id',
+            'title',
+            'thumbnail_image_url',
+            'tutor_name',
+            'category_name',
+            "start_date",
+        ]
+    
+    def get_thumbnail_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.course.thumbnail_image_url:
+            url = obj.course.thumbnail_image_url.url
+        else:
+            url = "/static/default.jpg"
+        
+        if request:
+            return request.build_absolute_uri(url)
+        return url
