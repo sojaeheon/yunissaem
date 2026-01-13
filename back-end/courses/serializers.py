@@ -147,8 +147,8 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             return enrollment.status
         return None
 
-# 수강중 과외 조회용 Serializer
-class EnrolledCourseListSerializer(serializers.ModelSerializer):
+# 마이페이지 과외 조회용 공용 Serializer
+class MypageCourseSerializer(serializers.ModelSerializer):
     course_id = serializers.IntegerField(source='course.id', read_only=True)
     title = serializers.CharField(source='course.title', read_only=True)
     tutor_name = serializers.CharField(source='course.tutor.username', read_only=True)
@@ -163,16 +163,22 @@ class EnrolledCourseListSerializer(serializers.ModelSerializer):
             'thumbnail_image_url',
             'tutor_name',
             'category_name',
-            "start_date",
         ]
-    
+
     def get_thumbnail_image_url(self, obj):
         request = self.context.get('request')
         if obj.course.thumbnail_image_url:
             url = obj.course.thumbnail_image_url.url
         else:
             url = "/static/default.jpg"
-        
+
         if request:
             return request.build_absolute_uri(url)
         return url
+    
+# 수강중 과외 조회용 Serializer
+class EnrolledCourseListSerializer(MypageCourseSerializer):
+    class Meta(MypageCourseSerializer.Meta):
+        fields = MypageCourseSerializer.Meta.fields + [
+            "start_date",
+        ]

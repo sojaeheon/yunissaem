@@ -308,5 +308,9 @@ class EnrolledCourseListView(APIView):
             .order_by("-created_at")
         )
 
-        serializer = EnrolledCourseListSerializer(enrollments, many=True)
+        serializer = EnrolledCourseListSerializer(
+            enrollments, 
+            many=True,
+            context={"request": request}
+        )
         return Response(serializer.data)
