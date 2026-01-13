@@ -6,7 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework import status
 from .models import Course, Enrollment, WishedCourses, Category
-from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer,EnrolledCourseListSerializer
+from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer,EnrolledCourseListSerializer, CompletedCourseListSerializer
 from accounts.models import User
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
@@ -312,5 +312,31 @@ class EnrolledCourseListView(APIView):
             enrollments, 
             many=True,
             context={"request": request}
+        )
+        return Response(serializer.data)
+    
+# 수강완료 과외 목록 조회 API
+class CompletedCourseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        enrollments = (
+            Enrollment.objects
+            .filter(
+                user=request.user,
+                status=Enrollment.StatusChoices.COMPLETED,
+            )
+            .select_related(
+                "course",
+                "course__tutor",
+                "course__category",
+            )
+            .order_by("-end_date")
+        )
+
+        serializer = CompletedCourseListSerializer(
+            enrollments,
+            many=True,
+            context={"request": request},
         )
         return Response(serializer.data)

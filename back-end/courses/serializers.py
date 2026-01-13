@@ -178,7 +178,20 @@ class MypageCourseSerializer(serializers.ModelSerializer):
     
 # 수강중 과외 조회용 Serializer
 class EnrolledCourseListSerializer(MypageCourseSerializer):
+    start_date = serializers.DateField(read_only=True)
+
     class Meta(MypageCourseSerializer.Meta):
         fields = MypageCourseSerializer.Meta.fields + [
             "start_date",
+        ]
+
+# 수강완료 과외 조회용 Serializer
+class CompletedCourseListSerializer(MypageCourseSerializer):
+    start_date = serializers.DateField(read_only=True)
+    end_date = serializers.DateField(read_only=True)
+
+    class Meta(MypageCourseSerializer.Meta):
+        fields = MypageCourseSerializer.Meta.fields + [
+            "start_date",
+            "end_date",
         ]
