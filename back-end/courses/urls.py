@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CompletedCourseListView, CourseDetailView, CourseWishToggleView, CourseStatusUpdateView, course_list_by_category, search_courses, create_course, EnrolledCourseListView
+from .views import CompletedCourseDeleteView, CompletedCourseListView, CourseDetailView, CourseWishToggleView, CourseStatusUpdateView, course_list_by_category, search_courses, create_course, EnrolledCourseListView
 
 urlpatterns = [
     path('<int:course_id>/', CourseDetailView.as_view(), name='course-detail'),
@@ -10,4 +10,5 @@ urlpatterns = [
     path('create/',create_course, name='course-create'),
     path('enrolled/', EnrolledCourseListView.as_view(), name='enrolled-course-list'),
     path('completed/', CompletedCourseListView.as_view(), name='completed-course-list'),
+    path('completed/<int:enrollment_id>/', CompletedCourseDeleteView.as_view(), name='completed-course-delete'),
 ]

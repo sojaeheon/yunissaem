@@ -345,3 +345,23 @@ class CompletedCourseListView(APIView):
             context={"request": request},
         )
         return Response(serializer.data)
+
+
+class CompletedCourseDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, enrollment_id):
+        enrollment = Enrollment.objects.filter(
+            id=enrollment_id,
+            user=request.user,
+            status=Enrollment.StatusChoices.COMPLETED,
+        ).first()
+
+        if not enrollment:
+            return Response(
+                {"error": "해당 과외를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        enrollment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -149,6 +149,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
 # 마이페이지 과외 조회용 공용 Serializer
 class MypageCourseSerializer(serializers.ModelSerializer):
+    enrollment_id = serializers.IntegerField(source='id', read_only=True)
     course_id = serializers.IntegerField(source='course.id', read_only=True)
     title = serializers.CharField(source='course.title', read_only=True)
     tutor_name = serializers.CharField(source='course.tutor.username', read_only=True)
@@ -158,6 +159,7 @@ class MypageCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = [
+            'enrollment_id',
             'course_id',
             'title',
             'thumbnail_image_url',
