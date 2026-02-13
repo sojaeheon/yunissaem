@@ -231,3 +231,44 @@ class TuteeWishedCourseSerializer(serializers.ModelSerializer):
         if request:
             return request.build_absolute_uri(url)
         return url
+
+
+# 튜터 개설 과외 공용 Serializer
+class TutorCourseSerializer(serializers.ModelSerializer):
+    course_id = serializers.IntegerField(source='id', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    thumbnail_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = [
+            'course_id',
+            'title',
+            'thumbnail_image_url',
+            'category_name',
+            'status',
+            'created_at',
+        ]
+
+    def get_thumbnail_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.thumbnail_image_url:
+            url = obj.thumbnail_image_url.url
+        else:
+            url = "/static/default.jpg"
+
+        if request:
+            return request.build_absolute_uri(url)
+        return url
+
+
+# 튜터 현재 개설 과외 조회용 Serializer
+class TutorCurrentCourseSerializer(TutorCourseSerializer):
+    class Meta(TutorCourseSerializer.Meta):
+        fields = TutorCourseSerializer.Meta.fields
+
+
+# 튜터 개설 완료 과외 조회용 Serializer
+class TutorPastCourseSerializer(TutorCourseSerializer):
+    class Meta(TutorCourseSerializer.Meta):
+        fields = TutorCourseSerializer.Meta.fields

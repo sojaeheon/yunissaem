@@ -6,7 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework import status
 from .models import Course, Enrollment, WishedCourses, Category
-from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer,TuteeEnrolledCourseSerializer, TuteeCompletedCourseSerializer, TuteeWishedCourseSerializer
+from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer,TuteeEnrolledCourseSerializer, TuteeCompletedCourseSerializer, TuteeWishedCourseSerializer, TutorCurrentCourseSerializer
 from .services import complete_expired_enrollments
 from accounts.models import User
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -402,4 +402,52 @@ class TuteeWishedCourseDeleteView(APIView):
             )
 
         wished_course.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TutorCurrentCourseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        courses = (
+            Course.objects
+            .filter(
+                tutor=request.user,
+                status__in=[
+                    Course.StatusChoices.RECRUITING,
+                    Course.StatusChoices.IN_PROGRESS,
+                ],
+            )
+            .select_related("category")
+            .order_by("-created_at")
+        )
+
+        serializer = TutorCurrentCourseSerializer(
+            courses,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+
+class TutorCurrentCourseDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, course_id):
+        course = Course.objects.filter(
+            id=course_id,
+            tutor=request.user,
+            status__in=[
+                Course.StatusChoices.RECRUITING,
+                Course.StatusChoices.IN_PROGRESS,
+            ],
+        ).first()
+
+        if not course:
+            return Response(
+                {"error": "해당 과외를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        course.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
