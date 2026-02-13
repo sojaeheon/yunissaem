@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CompletedCourseDeleteView, CompletedCourseListView, CourseDetailView, CourseWishToggleView, CourseStatusUpdateView, TuteeWishedCourseDeleteView, TuteeWishedCourseListView, TutorCurrentCourseDeleteView, TutorCurrentCourseListView, course_list_by_category, search_courses, create_course, EnrolledCourseListView
+from .views import CompletedCourseDeleteView, CompletedCourseListView, CourseDetailView, CourseWishToggleView, CourseStatusUpdateView, TuteeWishedCourseDeleteView, TuteeWishedCourseListView, TutorCurrentCourseDeleteView, TutorCurrentCourseListView, TutorPastCourseDeleteView, TutorPastCourseListView, course_list_by_category, search_courses, create_course, EnrolledCourseListView
 
 urlpatterns = [
     path('<int:course_id>/', CourseDetailView.as_view(), name='course-detail'),
@@ -15,4 +15,6 @@ urlpatterns = [
     path('wished/<int:wish_id>/', TuteeWishedCourseDeleteView.as_view(), name='wished-course-delete'),
     path('tutor/current/', TutorCurrentCourseListView.as_view(), name='tutor-current-course-list'),
     path('tutor/current/<int:course_id>/', TutorCurrentCourseDeleteView.as_view(), name='tutor-current-course-delete'),
+    path('tutor/past/', TutorPastCourseListView.as_view(), name='tutor-past-course-list'),
+    path('tutor/past/<int:course_id>/', TutorPastCourseDeleteView.as_view(), name='tutor-past-course-delete'),
 ]
