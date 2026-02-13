@@ -6,7 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework import status
 from .models import Course, Enrollment, WishedCourses, Category
-from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer,EnrolledCourseListSerializer, CompletedCourseListSerializer
+from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer,TuteeEnrolledCourseSerializer, TuteeCompletedCourseSerializer, TuteeWishedCourseSerializer
 from .services import complete_expired_enrollments
 from accounts.models import User
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -311,7 +311,7 @@ class EnrolledCourseListView(APIView):
             .order_by("-created_at")
         )
 
-        serializer = EnrolledCourseListSerializer(
+        serializer = TuteeEnrolledCourseSerializer(
             enrollments, 
             many=True,
             context={"request": request}
@@ -339,7 +339,7 @@ class CompletedCourseListView(APIView):
             .order_by("-end_date")
         )
 
-        serializer = CompletedCourseListSerializer(
+        serializer = TuteeCompletedCourseSerializer(
             enrollments,
             many=True,
             context={"request": request},
@@ -364,4 +364,42 @@ class CompletedCourseDeleteView(APIView):
             )
 
         enrollment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TuteeWishedCourseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        wished_courses = (
+            WishedCourses.objects
+            .filter(user=request.user)
+            .select_related("course", "course__tutor", "course__category")
+            .order_by("-created_at")
+        )
+
+        serializer = TuteeWishedCourseSerializer(
+            wished_courses,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+
+class TuteeWishedCourseDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, wish_id):
+        wished_course = WishedCourses.objects.filter(
+            id=wish_id,
+            user=request.user,
+        ).first()
+
+        if not wished_course:
+            return Response(
+                {"error": "해당 과외를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        wished_course.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
