@@ -7,6 +7,7 @@ from datetime import timedelta
 from rest_framework import status
 from .models import Course, Enrollment, WishedCourses, Category
 from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer,EnrolledCourseListSerializer, CompletedCourseListSerializer
+from .services import complete_expired_enrollments
 from accounts.models import User
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
@@ -298,6 +299,8 @@ class EnrolledCourseListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        complete_expired_enrollments(user=request.user)
+
         enrollments = (
             Enrollment.objects
             .filter(
@@ -320,6 +323,8 @@ class CompletedCourseListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        complete_expired_enrollments(user=request.user)
+
         enrollments = (
             Enrollment.objects
             .filter(
