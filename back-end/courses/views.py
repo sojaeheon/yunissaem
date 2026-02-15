@@ -7,7 +7,7 @@ from datetime import timedelta
 from rest_framework import status
 from .models import Course, Enrollment, WishedCourses, Category
 from .serializers import CourseDetailSerializer,CourseListSerializer,CourseCreateSerializer,TuteeEnrolledCourseSerializer, TuteeCompletedCourseSerializer, TuteeWishedCourseSerializer, TutorCurrentCourseSerializer, TutorPastCourseSerializer
-from .services import complete_expired_enrollments
+from .services import complete_expired_enrollments, finish_expired_tutor_courses
 from accounts.models import User
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
@@ -282,8 +282,12 @@ class CourseStatusUpdateView(APIView):
         if new_status not in valid_status:
             return Response({"error": "유효하지 않은 상태값입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 종료 상태로 변경하려면 수강생이 없어야 함
-        if new_status == Course.StatusChoices.FINISHED and course.tutees.exists():
+        # 종료 상태로 변경하려면 현재 수강중(enrolled) 튜티가 없어야 함
+        has_active_enrollment = Enrollment.objects.filter(
+            course=course,
+            status=Enrollment.StatusChoices.ENROLLED,
+        ).exists()
+        if new_status == Course.StatusChoices.FINISHED and has_active_enrollment:
             return Response({"error": "수강 중인 튜티가 있어 종료할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         course.status = new_status
@@ -409,6 +413,8 @@ class TutorCurrentCourseListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        finish_expired_tutor_courses(tutor=request.user)
+
         courses = (
             Course.objects
             .filter(
@@ -457,6 +463,8 @@ class TutorPastCourseListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        finish_expired_tutor_courses(tutor=request.user)
+
         courses = (
             Course.objects
             .filter(
