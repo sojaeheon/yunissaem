@@ -33,3 +33,4 @@ class User(AbstractUser):
     bio=models.CharField(max_length=50, blank=True)
     profile_image=models.URLField(blank=True)
     created_at=models.DateTimeField(auto_now_add=True)
+    tutor_intro = models.TextField(blank=True, verbose_name="튜터 상세 소개 및 경력") # tutor 소개 페이지 제공 위함
