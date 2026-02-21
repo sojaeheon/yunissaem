@@ -61,3 +61,42 @@ class ProfileSerializer(serializers.ModelSerializer):
         if not user.check_password(value):
             raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
         return value
+
+class TutorProfileUpdateSerializer(serializers.ModelSerializer):
+    # 수정 시 보안을 위한 비밀번호 확인 필드
+    current_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        # 튜터 페이지에서 수정할 필드들
+        fields = ['name', 'profile_image', 'tutor_intro', 'current_password']
+
+    def validate_current_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
+        return value
+
+    def update(self, instance, validated_data):
+        # 비밀번호 필드는 실제 모델 업데이트에 쓰이지 않으므로 제거
+        validated_data.pop('current_password', None)
+        return super().update(instance, validated_data)
+    
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    """
+    일반 유저 정보 조회용 (tutor_intro가 있을 때만 포함)
+    """
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'name', 'profile_image', 'bio', 'tutor_intro', 'phone']
+
+    def to_representation(self, instance):
+        # 1. 일단 전체 데이터를 직렬화합니다.
+        ret = super().to_representation(instance)
+        
+        # 2. tutor_intro가 비어있거나 None이면 응답 데이터에서 제외합니다.
+        if not ret.get('tutor_intro'):
+            ret.pop('tutor_intro', None)
+            
+        return ret
