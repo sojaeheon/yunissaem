@@ -89,7 +89,7 @@ class MyPageDetailView(generics.RetrieveUpdateAPIView):
     @swagger_auto_schema(
         operation_summary="마이페이지 조회",
         operation_description="현재 로그인한 사용자의 프로필을 조회합니다.",
-        responses={200: ProfileSerializer}
+        responses={200: UserDetailSerializer}   # ProfileSerializer에서 변경
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
