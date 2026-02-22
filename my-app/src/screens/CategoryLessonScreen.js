@@ -42,7 +42,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../utils/axiosInstance";
-import axios from "axios";
 import { BASE_URL, SERVER_BASE } from "../config/config";
 import CategoryMenu from "../screens/CategoryMenu";
 
@@ -278,7 +277,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
   // -----------------------------------------------------------
   const toggleFavorite = async (id) => {
     try {
-      const res = await axios.post(`${BASE_URL}/courses/${id}/wish/`);
+      const res = await api.post(`/courses/${id}/wish/`);
       const isLiked = res.data.is_wished;
 
       setFavoriteIds((prev) =>
