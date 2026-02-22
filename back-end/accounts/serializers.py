@@ -86,11 +86,18 @@ class TutorProfileUpdateSerializer(serializers.ModelSerializer):
         # 튜터 페이지에서 수정할 필드들
         fields = ['name', 'profile_image', 'tutor_intro', 'current_password']
 
-    def validate_current_password(self, value):
+    def validate(self, data):
+        # 1. PATCH 요청 시에도 비밀번호가 누락되지 않았는지 강제 확인
+        if 'current_password' not in data:
+            raise serializers.ValidationError({"current_password": "본인 확인을 위해 비밀번호를 입력해주세요."})
+        current_password = data.get('current_password')
+
+        # 2. 비밀번호 일치 여부 확인
         user = self.context['request'].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
-        return value
+        if not user.check_password(current_password):
+            raise serializers.ValidationError({"current_password": "비밀번호가 일치하지 않습니다."})
+
+        return data
 
     def update(self, instance, validated_data):
         # 비밀번호 필드는 실제 모델 업데이트에 쓰이지 않으므로 제거
@@ -106,7 +113,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ['id', 'username', 'name', 'profile_image', 'bio', 'tutor_intro', 'phone']
+        fields = ['id', 'username', 'name', 'profile_image', 'bio', 'tutor_intro']
 
     def to_representation(self, instance):
         # 1. 일단 전체 데이터를 직렬화합니다.
