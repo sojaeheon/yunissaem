@@ -102,7 +102,7 @@ function MainTabs() {
       <Tab.Screen
         name="MyPage"
         component={MyPageNavigator}
-        options={{ headerShown: false, title: "My Page" }}
+        options={{ headerShown: false, title: "My Page", popToTopOnBlur: true }}
       />
     </Tab.Navigator>
   );
