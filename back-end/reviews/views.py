@@ -2,9 +2,19 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
 from .models import Review
-from .serializers import ReviewCreateSerializer
+from .serializers import ReviewCreateSerializer, ReviewUpdateSerializer, ReviewSerializer
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """
+    조회는 누구나 가능하며, 수정/삭제는 작성자만 가능하도록 함
+    """
+    def has_object_permission(self, request, view, obj):
+        # GET, HEAD, OPTIONS 요청(안전한 요청)은 무조건 허용
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        # 그 외(PATCH, DELETE 등)는 작성자일 때만 허용
+        return obj.enrollment.user == request.user
 
 class ReviewCreateView(generics.CreateAPIView):
     """
@@ -44,3 +54,18 @@ class ReviewCreateView(generics.CreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+    
+class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET   : 리뷰 상세 조회
+    PATCH : 리뷰 수정 (본인만 가능)
+    DELETE: 리뷰 삭제 (본인만 가능)
+    """
+    queryset = Review.objects.all()
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    lookup_field = 'id'
+
+    def get_serializer_class(self):
+        if self.request.method in ['PATCH', 'PUT']:
+            return ReviewUpdateSerializer
+        return ReviewSerializer # GET 요청 등 기본값
