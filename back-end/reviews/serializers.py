@@ -12,9 +12,16 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 # reviews/serializers.py
 class ReviewCreateSerializer(serializers.ModelSerializer):
+    rating = serializers.FloatField()
+
     class Meta:
         model = Review
         fields = ['enrollment', 'rating', 'comment']
+
+    # 입력받은 값을 Decimal로 변환해서 반환하므로, 모델 저장 시 FloatField로 받아도 안전함
+    def validate_rating(self, value):
+        from decimal import Decimal
+        return Decimal(str(value))
 
     def validate(self, data):
         user = self.context['request'].user
