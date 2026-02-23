@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Category
+from .models import Course, Category, Enrollment, WishedCourses
 from accounts.models import User
 from reviews.serializers import ReviewSerializer
 from django.conf import settings
@@ -146,3 +146,129 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         if enrollment:
             return enrollment.status
         return None
+
+# 튜티 과외 조회용 공용 Serializer
+class TuteeCourseSerializer(serializers.ModelSerializer):
+    enrollment_id = serializers.IntegerField(source='id', read_only=True)
+    course_id = serializers.IntegerField(source='course.id', read_only=True)
+    title = serializers.CharField(source='course.title', read_only=True)
+    tutor_name = serializers.CharField(source='course.tutor.username', read_only=True)
+    category_name = serializers.CharField(source='course.category.name', read_only=True)
+    thumbnail_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Enrollment
+        fields = [
+            'enrollment_id',
+            'course_id',
+            'title',
+            'thumbnail_image_url',
+            'tutor_name',
+            'category_name',
+        ]
+
+    def get_thumbnail_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.course.thumbnail_image_url:
+            url = obj.course.thumbnail_image_url.url
+        else:
+            url = "/static/default.jpg"
+
+        if request:
+            return request.build_absolute_uri(url)
+        return url
+    
+# 튜티 수강중 과외 조회용 Serializer
+class TuteeEnrolledCourseSerializer(TuteeCourseSerializer):
+    start_date = serializers.DateField(read_only=True)
+
+    class Meta(TuteeCourseSerializer.Meta):
+        fields = TuteeCourseSerializer.Meta.fields + [
+            "start_date",
+        ]
+
+# 튜티 수강완료 과외 조회용 Serializer
+class TuteeCompletedCourseSerializer(TuteeCourseSerializer):
+    start_date = serializers.DateField(read_only=True)
+    end_date = serializers.DateField(read_only=True)
+
+    class Meta(TuteeCourseSerializer.Meta):
+        fields = TuteeCourseSerializer.Meta.fields + [
+            "start_date",
+            "end_date",
+        ]
+
+
+# 튜티 찜한 과외 조회용 Serializer
+class TuteeWishedCourseSerializer(serializers.ModelSerializer):
+    wish_id = serializers.IntegerField(source='id', read_only=True)
+    course_id = serializers.IntegerField(source='course.id', read_only=True)
+    title = serializers.CharField(source='course.title', read_only=True)
+    tutor_name = serializers.CharField(source='course.tutor.username', read_only=True)
+    category_name = serializers.CharField(source='course.category.name', read_only=True)
+    thumbnail_image_url = serializers.SerializerMethodField()
+    wished_at = serializers.DateTimeField(source='created_at', read_only=True)
+
+    class Meta:
+        model = WishedCourses
+        fields = [
+            'wish_id',
+            'course_id',
+            'title',
+            'thumbnail_image_url',
+            'tutor_name',
+            'category_name',
+            'wished_at',
+        ]
+
+    def get_thumbnail_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.course.thumbnail_image_url:
+            url = obj.course.thumbnail_image_url.url
+        else:
+            url = "/static/default.jpg"
+
+        if request:
+            return request.build_absolute_uri(url)
+        return url
+
+
+# 튜터 개설 과외 공용 Serializer
+class TutorCourseSerializer(serializers.ModelSerializer):
+    course_id = serializers.IntegerField(source='id', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    thumbnail_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = [
+            'course_id',
+            'title',
+            'thumbnail_image_url',
+            'category_name',
+            'status',
+            'created_at',
+        ]
+
+    def get_thumbnail_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.thumbnail_image_url:
+            url = obj.thumbnail_image_url.url
+        else:
+            url = "/static/default.jpg"
+
+        if request:
+            return request.build_absolute_uri(url)
+        return url
+
+
+# 튜터 현재 개설 과외 조회용 Serializer
+class TutorCurrentCourseSerializer(TutorCourseSerializer):
+    class Meta(TutorCourseSerializer.Meta):
+        fields = TutorCourseSerializer.Meta.fields
+
+
+# 튜터 개설 완료 과외 조회용 Serializer
+class TutorPastCourseSerializer(TutorCourseSerializer):
+    class Meta(TutorCourseSerializer.Meta):
+        fields = TutorCourseSerializer.Meta.fields

@@ -3,12 +3,18 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.db.models import Q
 from rest_framework import status
-from .models import Course, WishedCourses, Category
+from .models import Course, Enrollment, WishedCourses, Category
 from .serializers import (
     CourseDetailSerializer,
     CourseListSerializer,
-    CourseCreateSerializer
+    CourseCreateSerializer,
+    TuteeEnrolledCourseSerializer,
+    TuteeCompletedCourseSerializer,
+    TuteeWishedCourseSerializer,
+    TutorCurrentCourseSerializer,
+    TutorPastCourseSerializer,
 )
+from .services import complete_expired_enrollments, finish_expired_tutor_courses
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from drf_yasg.utils import swagger_auto_schema
@@ -212,7 +218,228 @@ class CourseStatusUpdateView(APIView):
         if request.user != course.tutor:
             return Response({"error": "상태 변경 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
-        course.status = request.data.get("status")
+        new_status = request.data.get("status")
+        valid_status = [choice[0] for choice in Course.StatusChoices.choices]
+
+        if new_status not in valid_status:
+            return Response({"error": "유효하지 않은 상태값입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 종료 상태로 변경하려면 현재 수강중(enrolled) 튜티가 없어야 함
+        has_active_enrollment = Enrollment.objects.filter(
+            course=course,
+            status=Enrollment.StatusChoices.ENROLLED,
+        ).exists()
+        if new_status == Course.StatusChoices.FINISHED and has_active_enrollment:
+            return Response({"error": "수강 중인 튜티가 있어 종료할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        course.status = new_status
         course.save(update_fields=["status"])
 
-        return Response({"message": "과외 상태가 변경되었습니다.", "status": course.status})
+        return Response({
+            "message": f"과외 상태가 '{new_status}'로 변경되었습니다.",
+            "status": course.status
+        }, status=status.HTTP_200_OK)
+
+# 수강중 과외 목록 조회 API
+class EnrolledCourseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        complete_expired_enrollments(user=request.user)
+
+        enrollments = (
+            Enrollment.objects
+            .filter(
+                user=request.user,
+                status=Enrollment.StatusChoices.ENROLLED
+            )
+            .select_related("course", "course__tutor", 'course__category')
+            .order_by("-created_at")
+        )
+
+        serializer = TuteeEnrolledCourseSerializer(
+            enrollments, 
+            many=True,
+            context={"request": request}
+        )
+        return Response(serializer.data)
+    
+# 수강완료 과외 목록 조회 API
+class CompletedCourseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        complete_expired_enrollments(user=request.user)
+
+        enrollments = (
+            Enrollment.objects
+            .filter(
+                user=request.user,
+                status=Enrollment.StatusChoices.COMPLETED,
+            )
+            .select_related(
+                "course",
+                "course__tutor",
+                "course__category",
+            )
+            .order_by("-end_date")
+        )
+
+        serializer = TuteeCompletedCourseSerializer(
+            enrollments,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+
+class CompletedCourseDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, enrollment_id):
+        enrollment = Enrollment.objects.filter(
+            id=enrollment_id,
+            user=request.user,
+            status=Enrollment.StatusChoices.COMPLETED,
+        ).first()
+
+        if not enrollment:
+            return Response(
+                {"error": "해당 과외를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        enrollment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TuteeWishedCourseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        wished_courses = (
+            WishedCourses.objects
+            .filter(user=request.user)
+            .select_related("course", "course__tutor", "course__category")
+            .order_by("-created_at")
+        )
+
+        serializer = TuteeWishedCourseSerializer(
+            wished_courses,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+
+class TuteeWishedCourseDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, wish_id):
+        wished_course = WishedCourses.objects.filter(
+            id=wish_id,
+            user=request.user,
+        ).first()
+
+        if not wished_course:
+            return Response(
+                {"error": "해당 과외를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        wished_course.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TutorCurrentCourseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        finish_expired_tutor_courses(tutor=request.user)
+
+        courses = (
+            Course.objects
+            .filter(
+                tutor=request.user,
+                status__in=[
+                    Course.StatusChoices.RECRUITING,
+                    Course.StatusChoices.IN_PROGRESS,
+                ],
+            )
+            .select_related("category")
+            .order_by("-created_at")
+        )
+
+        serializer = TutorCurrentCourseSerializer(
+            courses,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+
+class TutorCurrentCourseDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, course_id):
+        course = Course.objects.filter(
+            id=course_id,
+            tutor=request.user,
+            status__in=[
+                Course.StatusChoices.RECRUITING,
+                Course.StatusChoices.IN_PROGRESS,
+            ],
+        ).first()
+
+        if not course:
+            return Response(
+                {"error": "해당 과외를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        course.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TutorPastCourseListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        finish_expired_tutor_courses(tutor=request.user)
+
+        courses = (
+            Course.objects
+            .filter(
+                tutor=request.user,
+                status=Course.StatusChoices.FINISHED,
+            )
+            .select_related("category")
+            .order_by("-created_at")
+        )
+
+        serializer = TutorPastCourseSerializer(
+            courses,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+
+class TutorPastCourseDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, course_id):
+        course = Course.objects.filter(
+            id=course_id,
+            tutor=request.user,
+            status=Course.StatusChoices.FINISHED,
+        ).first()
+
+        if not course:
+            return Response(
+                {"error": "해당 과외를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        course.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
