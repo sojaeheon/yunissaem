@@ -93,6 +93,7 @@ export default function HomeScreen({ navigation, route }) {
       item.enrolled_count = enrolled;
       item.capacity = capacity;
       item.rating = item.average_rating ?? item.rating ?? null;
+      item.category = item.category_name ?? item.category ?? null;
 
       return item;
     });
@@ -155,13 +156,15 @@ export default function HomeScreen({ navigation, route }) {
         style={styles.lessonCard}
         onPress={() => navigation.navigate("LessonDetail", { lesson: item, lessonId: item.id ?? item.pk })}
       >
-        {item.thumbnail ? (
-          <Image source={{ uri: item.thumbnail }} style={styles.lessonThumbnail} />
-        ) : (
-          <View style={[styles.lessonThumbnail, { justifyContent: "center", alignItems: "center" }]}>
-            <Text>이미지 없음</Text>
-          </View>
-        )}
+        <View style={styles.lessonThumbnailWrap}>
+          {item.thumbnail ? (
+            <Image source={{ uri: item.thumbnail }} style={styles.lessonThumbnail} />
+          ) : (
+            <View style={[styles.lessonThumbnail, { justifyContent: "center", alignItems: "center" }]}>
+              <Text>이미지 없음</Text>
+            </View>
+          )}
+        </View>
 
         {/* 제목: 2줄 초과 시 말줄임(...) */}
         <Text style={styles.lessonTitle} numberOfLines={2} ellipsizeMode="tail">
@@ -170,13 +173,18 @@ export default function HomeScreen({ navigation, route }) {
 
         <Text style={styles.lessonTutor}>{item.tutor_name || item.tutor || "강사 정보 없음"}</Text>
 
-        {/* 카테고리가 있을 때만 렌더 */}
-       {item.category ? <Text style={styles.lessonCategory}>{item.category}</Text> : null}
-
         {/* 수강 인원 / 정원 표시 */}
         {capacityDisplay ? <Text style={styles.lessonCapacity}>{capacityDisplay}</Text> : null}
 
         <Text style={styles.lessonRating}>★ {item.rating ?? "-"}</Text>
+
+        {item.category ? (
+          <View style={styles.categoryBadgeCard}>
+            <Text style={styles.categoryBadgeText} numberOfLines={1}>
+              {item.category}
+            </Text>
+          </View>
+        ) : null}
       </TouchableOpacity>
     );
   };
@@ -269,8 +277,28 @@ const styles = StyleSheet.create({
     width: "100%",            // 카드 내부 너비에 맞춰 꽉 채우기 -> 좌우 여백이 일정해짐
     height: 110,             // 높이 조정 (필요 시 더 늘릴 수 있음)
     borderRadius: 5,
-    marginBottom: 8,
     backgroundColor: "#ddd",
+  },
+  lessonThumbnailWrap: {
+    width: "100%",
+    height: 110,
+    marginBottom: 8,
+    position: "relative",
+  },
+  categoryBadgeCard: {
+    position: "absolute",
+    bottom: 6,
+    right: 6,
+    backgroundColor: "rgba(0,0,0,0.65)",
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    maxWidth: "65%",
+  },
+  categoryBadgeText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "600",
   },
   lessonTitle: { fontSize: 16, fontWeight: "bold", alignSelf: "flex-start" },
   lessonTutor: {
