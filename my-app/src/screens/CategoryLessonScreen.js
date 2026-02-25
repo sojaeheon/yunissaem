@@ -296,11 +296,21 @@ export default function CategoryLessonScreen({ navigation, route }) {
   // -----------------------------------------------------------
   // 필터링 처리 (정렬은 서버에서)
   // -----------------------------------------------------------
-  let filteredLessons = lessons.filter(
+  const filteredLessonsRaw = lessons.filter(
     (l) =>
       (category === "전체" || l.category === category) &&
       (showUnavailable || l.available) &&
       (searchTerm === "" || l.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  // 같은 강의가 중복 표시되는 경우를 방지 (제목+튜터 기준)
+  const filteredLessons = Array.from(
+    new Map(
+      filteredLessonsRaw.map((item) => [
+        `${(item.title || "").trim().toLowerCase()}::${(item.tutor || "").trim().toLowerCase()}`,
+        item,
+      ])
+    ).values()
   );
 
   // -----------------------------------------------------------
