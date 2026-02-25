@@ -92,6 +92,7 @@ export default function HomeScreen({ navigation, route }) {
       // 일관된 키로 넣어두면 render에서 안전하게 사용 가능
       item.enrolled_count = enrolled;
       item.capacity = capacity;
+      item.rating = item.average_rating ?? item.rating ?? null;
 
       return item;
     });
