@@ -83,7 +83,7 @@ export default function CategoryMenu({ visible, onClose, navigation }) {
   if (!isMounted) return null;
 
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <View style={styles.root}>
       {/* --- 배경 오버레이 영역 (터치 시 닫기) --- */}
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View
@@ -129,9 +129,16 @@ export default function CategoryMenu({ visible, onClose, navigation }) {
 
 // 스타일 정의
 const styles = StyleSheet.create({
+  root: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9999,
+    elevation: 9999,
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "black", // 반투명 배경
+    zIndex: 1,
+    elevation: 1,
   },
   drawer: {
     position: "absolute",
@@ -143,7 +150,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopRightRadius: 12,
     borderBottomRightRadius: 12,
-    elevation: 5, // 안드로이드 그림자 효과
+    elevation: 30, // 안드로이드 그림자 효과
+    zIndex: 2,
   },
   header: {
     flexDirection: "row",
