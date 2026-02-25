@@ -27,12 +27,35 @@ import {
     Alert,
     SectionList,
 } from "react-native";
-import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
 import api from "../utils/axiosInstance";
 import CategoryMenu from "../screens/CategoryMenu";
 import { BASE_URL, SERVER_BASE } from "../config/config";
 import { useFocusEffect } from "@react-navigation/native";
 
+const CATEGORY_COLORS = {
+  음악: { bg: "#ffe3e3", text: "#9f1239", border: "#fecdd3" },
+  운동: { bg: "#dcfce7", text: "#166534", border: "#86efac" },
+  예술: { bg: "#ede9fe", text: "#5b21b6", border: "#c4b5fd" },
+  프로그래밍: { bg: "#dbeafe", text: "#1d4ed8", border: "#93c5fd" },
+  "금융/재테크": { bg: "#fef3c7", text: "#92400e", border: "#fcd34d" },
+  외국어: { bg: "#fde68a", text: "#854d0e", border: "#facc15" },
+  기타: { bg: "#e2e8f0", text: "#334155", border: "#cbd5e1" },
+};
+
+const SECTION_COLORS = {
+  "인기 강의": { accent: "#f97316", countBg: "#ffedd5", countText: "#9a3412" },
+  "최신 강의": { accent: "#0ea5e9", countBg: "#e0f2fe", countText: "#0c4a6e" },
+  "찜한 강의": { accent: "#ef4444", countBg: "#fee2e2", countText: "#991b1b" },
+  "진행 중인 강의": { accent: "#22c55e", countBg: "#dcfce7", countText: "#166534" },
+};
+
+const SECTION_ICONS = {
+  "인기 강의": "flame",
+  "최신 강의": "sparkles",
+  "찜한 강의": "heart",
+  "진행 중인 강의": "play-circle",
+};
 
 export default function HomeScreen({ navigation, route }) {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -151,17 +174,41 @@ export default function HomeScreen({ navigation, route }) {
       capacityDisplay = `정원: ${capacityNum}`;
     }
 
+    const categoryTheme = CATEGORY_COLORS[item.category] ?? {
+      bg: "#e2e8f0",
+      text: "#334155",
+      border: "#cbd5e1",
+    };
+
     return (
       <TouchableOpacity
         style={styles.lessonCard}
         onPress={() => navigation.navigate("LessonDetail", { lesson: item, lessonId: item.id ?? item.pk })}
+        activeOpacity={0.9}
       >
+        {item.category ? (
+          <View
+            style={[
+              styles.categoryBadgeCard,
+              {
+                backgroundColor: categoryTheme.bg,
+                borderColor: categoryTheme.border,
+              },
+            ]}
+          >
+            <Text style={[styles.categoryBadgeText, { color: categoryTheme.text }]} numberOfLines={1}>
+              {item.category}
+            </Text>
+          </View>
+        ) : null}
+
         <View style={styles.lessonThumbnailWrap}>
           {item.thumbnail ? (
             <Image source={{ uri: item.thumbnail }} style={styles.lessonThumbnail} />
           ) : (
-            <View style={[styles.lessonThumbnail, { justifyContent: "center", alignItems: "center" }]}>
-              <Text>이미지 없음</Text>
+            <View style={[styles.lessonThumbnail, styles.thumbnailFallback]}>
+              <Ionicons name="image-outline" size={26} color="#75808f" />
+              <Text style={styles.thumbnailFallbackText}>이미지 없음</Text>
             </View>
           )}
         </View>
@@ -173,18 +220,11 @@ export default function HomeScreen({ navigation, route }) {
 
         <Text style={styles.lessonTutor}>{item.tutor_name || item.tutor || "강사 정보 없음"}</Text>
 
-        {/* 수강 인원 / 정원 표시 */}
-        {capacityDisplay ? <Text style={styles.lessonCapacity}>{capacityDisplay}</Text> : null}
-
-        <Text style={styles.lessonRating}>★ {item.rating ?? "-"}</Text>
-
-        {item.category ? (
-          <View style={styles.categoryBadgeCard}>
-            <Text style={styles.categoryBadgeText} numberOfLines={1}>
-              {item.category}
-            </Text>
-          </View>
-        ) : null}
+        <View style={styles.metaRow}>
+          {/* 수강 인원 / 정원 표시 */}
+          {capacityDisplay ? <Text style={styles.lessonCapacity}>{capacityDisplay}</Text> : null}
+          <Text style={styles.lessonRating}>★ {item.rating ?? "-"}</Text>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -204,9 +244,34 @@ export default function HomeScreen({ navigation, route }) {
         sections={sections}
         keyExtractor={(item, index) => String(index)}
         // section.header 렌더: 타이틀
-        renderSectionHeader={({ section: { title } }) => (
-          <Text style={styles.sectionTitle}>{title}</Text>
-        )}
+        renderSectionHeader={({ section }) => {
+          const items = section.data?.[0] ?? [];
+          const sectionTheme = SECTION_COLORS[section.title] ?? {
+            accent: "#2563eb",
+            countBg: "#e8edf8",
+            countText: "#334155",
+          };
+          const sectionIcon = SECTION_ICONS[section.title] ?? "albums";
+          return (
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.sectionTitleWrap}>
+                <View style={[styles.sectionAccent, { backgroundColor: sectionTheme.accent }]} />
+                <View style={[styles.sectionIconBubble, { backgroundColor: sectionTheme.countBg }]}>
+                  <Ionicons name={sectionIcon} size={14} color={sectionTheme.accent} />
+                </View>
+                <Text style={styles.sectionTitle}>{section.title}</Text>
+              </View>
+              <Text
+                style={[
+                  styles.sectionCount,
+                  { backgroundColor: sectionTheme.countBg, color: sectionTheme.countText },
+                ]}
+              >
+                {Array.isArray(items) ? items.length : 0}
+              </Text>
+            </View>
+          );
+        }}
         // 각 section.data의 첫 (유일) 아이템은 실제 아이템 배열이므로,
         // renderItem에서 해당 배열을 꺼내 가로 FlatList로 렌더링
         renderItem={({ item, section }) => {
@@ -214,8 +279,9 @@ export default function HomeScreen({ navigation, route }) {
           // 빈 섹션이면 안내 텍스트 표시
           if (!Array.isArray(items) || items.length === 0) {
             return (
-              <View style={{ padding: 12 }}>
-                <Text>{section.title}이(가) 없습니다.</Text>
+              <View style={styles.emptyState}>
+                <Ionicons name="albums-outline" size={18} color="#7f8b99" />
+                <Text style={styles.emptyStateText}>{section.title}이(가) 없습니다.</Text>
               </View>
             );
           }
@@ -224,7 +290,7 @@ export default function HomeScreen({ navigation, route }) {
               data={items}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 10 }}
+              contentContainerStyle={styles.horizontalListContent}
               keyExtractor={(it, idx) => String(it.id ?? it.pk ?? `${section.title}-${idx}`)}
               renderItem={renderLessonCard}
             />
@@ -251,73 +317,163 @@ export default function HomeScreen({ navigation, route }) {
 
 /* 스타일: 기존 스타일 재사용 */
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ffffffff", paddingTop: 10 },
+  container: { flex: 1, backgroundColor: "#f6f8fc", paddingTop: 6 },
 
-  // 변경: 섹션 타이틀 글씨 키움 (인기 강의, 진행 중인 강의 등)
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  sectionTitleWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  sectionIconBubble: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 6,
+  },
+  sectionAccent: {
+    width: 4,
+    height: 16,
+    borderRadius: 3,
+    marginRight: 6,
+  },
   sectionTitle: {
-    fontSize: 22,      // 기존 18 -> 22로 증가
-    fontWeight: "700", // 기존 600 -> 700으로 강조
-    marginLeft: 20,
-   
-    marginVertical: 12,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#121826",
+    letterSpacing: -0.1,
+  },
+  sectionCount: {
+    fontSize: 11,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    overflow: "hidden",
+  },
+  horizontalListContent: {
+    paddingHorizontal: 12,
+    paddingTop: 12,
+  },
+  emptyState: {
+    marginHorizontal: 16,
+    marginBottom: 6,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#e8edf6",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  emptyStateText: {
+    color: "#5f6978",
+    fontSize: 13,
+    marginLeft: 8,
   },
 
   lessonCard: {
-    width: 170,
-    minHeight: 240,
-    backgroundColor: "#f8f8f8ff",
-    borderRadius: 8,
+    width: 178,
+    minHeight: 228,
+    backgroundColor: "#ffffff",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#e4e9f2",
     padding: 10,
-    marginBottom: 30,
-    marginRight: 10,           // 오른쪽 간격으로 통일 (FlatList의 contentContainerStyle에서 좌우 패딩 관리)
+    marginBottom: 20,
+    marginRight: 10,
     justifyContent: "flex-start",
     alignItems: "flex-start",
+    shadowColor: "#0f172a",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
+    overflow: "visible",
   },
   lessonThumbnail: {
-    width: "100%",            // 카드 내부 너비에 맞춰 꽉 채우기 -> 좌우 여백이 일정해짐
-    height: 110,             // 높이 조정 (필요 시 더 늘릴 수 있음)
-    borderRadius: 5,
+    width: "100%",
+    height: 112,
+    borderRadius: 10,
     backgroundColor: "#ddd",
+  },
+  thumbnailFallback: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  thumbnailFallbackText: {
+    marginTop: 4,
+    fontSize: 11,
+    color: "#667287",
   },
   lessonThumbnailWrap: {
     width: "100%",
-    height: 110,
+    height: 112,
     marginBottom: 8,
     position: "relative",
   },
   categoryBadgeCard: {
     position: "absolute",
-    bottom: 6,
-    right: 6,
-    backgroundColor: "rgba(0,0,0,0.65)",
-    borderRadius: 10,
+    top: -6,
+    left: -6,
+    zIndex: 5,
+    borderWidth: 1,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+    borderBottomLeftRadius: 2,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    maxWidth: "65%",
+    maxWidth: "62%",
   },
   categoryBadgeText: {
-    color: "#fff",
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: "600",
   },
-  lessonTitle: { fontSize: 16, fontWeight: "bold", alignSelf: "flex-start" },
+  lessonTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "700",
+    alignSelf: "flex-start",
+    color: "#131722",
+    marginBottom: 2,
+  },
   lessonTutor: {
     fontSize: 13,
-    color: "#333",
-    marginBottom: 0,
+    color: "#566074",
+    marginBottom: 6,
     alignSelf: "flex-start",
   },
-  lessonCategory: { fontSize: 14, color: "#555" },
+  metaRow: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: "auto",
+  },
   lessonCapacity: {
-    fontSize: 13,
-    color: "#888",
-    marginTop: 2,
+    fontSize: 11,
+    color: "#4c5568",
+    backgroundColor: "#eef2f8",
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     alignSelf: "flex-start",
+    maxWidth: "72%",
   },
   lessonRating: {
-    fontSize: 13,
-    color: "#f5a623",
-    marginTop: 4,
+    fontSize: 11,
+    color: "#b57000",
+    backgroundColor: "#fff4d6",
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     alignSelf: "flex-start",
+    fontWeight: "700",
   },
 });
