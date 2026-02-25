@@ -20,6 +20,7 @@ last_login: 마지막 로그인 시간
 - first_name: 사용자 이름
 - last_name: 사용자 성
 - date_joined: 계정 생성 시간
++ name: 사용자 본명
 + phone: 전화번호
 + bio: user 상태 메세지
 + profile_image: 프로필 이미지 URL
@@ -32,3 +33,4 @@ class User(AbstractUser):
     bio=models.CharField(max_length=50, blank=True)
     profile_image=models.URLField(blank=True)
     created_at=models.DateTimeField(auto_now_add=True)
+    tutor_intro = models.TextField(blank=True, verbose_name="튜터 상세 소개 및 경력") # tutor 소개 페이지 제공 위함

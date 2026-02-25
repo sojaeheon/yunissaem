@@ -1,68 +1,53 @@
-# users/views.py
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
-from .serializers import UserRegisterSerializer
-# from courses.serializers import CourseListSerializer
-# from accounts.models import User # User 모델 임포트
-# from accounts.selector import get_wishlist_courses, get_attending_courses
-# from courses.selector import get_new_courses, get_popular_courses
+from rest_framework import status, generics
 
-'''
-# 홈화면 (로그인 기능 없을 때 테스트용)
-# 추후 permission_classes도 수정
-@api_view(['GET'])
-def home_view(request):
-    """
-    임시 테스트용 API: 로그인 기능 구현 전, ID가 1인 유저가 로그인한 것처럼 가정
-    """
-    # --- 테스트용 임시 코드 ---
-    # 실제 로그인 기능이 없으므로, 테스트용 유저를 DB에서 직접 가져옴
-    # ※※※실제 배포 시에는 이 코드를 반드시 삭제※※※
-    try:
-        # ID가 1인 유저를 'testuser'라고 가정
-        user = User.objects.get(id=1)
-    except User.DoesNotExist:
-        return Response({"error": "테스트용 유저(id=1)가 DB에 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
-    # request.user에 강제로 할당하여 마치 로그인된 것처럼 만듭니다.
-    request.user = user
-    # --- 테스트용 임시 코드 끝 ---
+from .serializers import UserRegisterSerializer, ProfileSerializer, UserDetailSerializer, TutorProfileUpdateSerializer
+from .models import User
 
-    # request.user가 실제 User 객체이므로 is_authenticated는 항상 True입니다.
-    wishlist_qs = request.user.wished_courses.all().order_by('-created_at')[:10]
-    attending_qs = request.user.attending_courses.all().order_by('-created_at')[:10]
-
-    wishlist_serializer = CourseListSerializer(wishlist_qs, many=True)
-    attending_serializer = CourseListSerializer(attending_qs, many=True)
-
-    response_data = {
-        'my_wishlist': wishlist_serializer.data,
-        'my_attending_courses': attending_serializer.data
+# =========================================================
+# 👤 회원가입 API
+# =========================================================
+@swagger_auto_schema(
+    method="post",
+    operation_summary="회원가입",
+    operation_description="사용자 회원가입 API",
+    request_body=UserRegisterSerializer,
+    responses={
+        201: openapi.Response(
+            description="회원가입 성공",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "message": openapi.Schema(type=openapi.TYPE_STRING),
+                    "user": openapi.Schema(type=openapi.TYPE_OBJECT),
+                }
+            ),
+            examples={
+                "application/json": {
+                    "message": "회원가입 성공",
+                    "user": {
+                        "id": 1,
+                        "username": "testuser",
+                        "email": "test@test.com"
+                    }
+                }
+            }
+        ),
+        400: openapi.Response(description="유효성 검사 실패"),
     }
-    
-    # 인기, 신규, 찜, 수강중 과외 
-    courses = {
-        'popular_courses': get_popular_courses(),
-        'new_courses': get_new_courses(60), # 최신 기준일 지정
-        'my_wishlist': get_wishlist_courses(user),
-        'my_attending_courses': get_attending_courses(user),
-    }
-
-    response_data = {key: CourseListSerializer(value, many=True).data for key, value in courses.items()}
-
-    return Response(response_data)
-'''
-    
+)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_view(request):
     serializer = UserRegisterSerializer(data=request.data)
-    
+
     if serializer.is_valid():
-        user = serializer.save()
-        
+        serializer.save()
         return Response(
             {
                 "message": "회원가입 성공",
@@ -71,6 +56,88 @@ def register_view(request):
             status=status.HTTP_201_CREATED,
         )
 
-        # 실패 시 에러 메시지 반환
-    print(serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# =========================================================
+# 마이페이지 조회 / 수정 API
+# =========================================================
+class MyPageDetailView(generics.RetrieveUpdateAPIView):
+    """
+    GET  : 내 프로필 조회 - tutor_intro가 있으면 포함
+    PATCH: 내 프로필 수정
+    """
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        # GET 요청(조회) 시에는 tutor_intro 유무를 체크하는 UserDetailSerializer 사용
+        if self.request.method == 'GET':
+            return UserDetailSerializer
+        return ProfileSerializer
+
+    def get_object(self):
+        # 현재 로그인한 유저만 접근 가능
+        return self.request.user
+
+    def get_serializer_context(self):
+        # serializer에서 request 접근 가능하도록 전달
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+
+    @swagger_auto_schema(
+        operation_summary="마이페이지 조회",
+        operation_description="현재 로그인한 사용자의 프로필을 조회합니다.",
+        responses={200: UserDetailSerializer}   # ProfileSerializer에서 변경
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+# =========================================================
+# 튜터 설정 API (본인 경력 수정)
+# =========================================================
+class MyTutorSettingsView(generics.RetrieveUpdateAPIView):
+    """
+    GET  : 내 튜터 정보 조회
+    PATCH: 내 튜터 정보(tutor_intro) 수정
+    """
+    serializer_class = TutorProfileUpdateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+
+    @swagger_auto_schema(
+        operation_summary="튜터 설정 수정",
+        operation_description="본인의 튜터 소개 내용을 수정합니다. 비밀번호 확인이 필요합니다.",
+        request_body=TutorProfileUpdateSerializer,
+        responses={200: TutorProfileUpdateSerializer}
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+    
+# =========================================================
+# 튜터 공개 프로필 API (타인 조회용)
+# =========================================================
+class TutorPublicDetailView(generics.RetrieveAPIView):
+    """
+    GET : 특정 유저(튜터)의 공개 프로필 조회
+    """
+    queryset = User.objects.all()
+    serializer_class = UserDetailSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+    @swagger_auto_schema(
+        operation_summary="튜터 공개 프로필 조회",
+        operation_description="특정 ID를 가진 유저의 공개 프로필을 조회합니다.",
+        responses={200: UserDetailSerializer, 401: "인증 정보가 없습니다.", 404: "유저를 찾을 수 없습니다."}
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)

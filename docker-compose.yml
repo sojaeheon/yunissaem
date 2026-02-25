@@ -20,6 +20,8 @@ services:
     # 8000번 포트를 다른 컨테이너에 노출시킨다.
     # Nginx가 이 포트로 요청을 전달한다.
     # nginx.conf에 django 포트에 대한 내용이 작성되어 있으므로 yml에  따로 작성하지 않아도 된다.
+    ports:
+      - "8000:8000"
     expose:
       - 8000
 
@@ -105,6 +107,7 @@ services:
     environment:
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
       - HOST=0.0.0.0
+      - REACT_NATIVE_PACKAGER_HOSTNAME=${PC_IP:-localhost}
     stdin_open: true
     tty: true
     networks:

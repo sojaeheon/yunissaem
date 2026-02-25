@@ -18,7 +18,7 @@ class Course(models.Model):
     description: 과외 소개
     curriculum:	커리큘럼 내용
     max_tutees: 최대 수강 인원
-    + status: 상태 - (준비중, 모집중, 강의중, 종료)
+    + status: 상태 - (모집중, 강의중, 종료)
     + view_count: 조회수
 
     category_id: 과외 카테고리
