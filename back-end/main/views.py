@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from courses.serializers import CourseListSerializer
-from courses.models import Course
 from accounts.models import User
 from accounts.selector import get_wishlist_courses, get_attending_courses
 from courses.selector import get_new_courses, get_popular_courses
@@ -74,18 +73,11 @@ def home_view(request):
         except (User.DoesNotExist, ValueError):
             user = None
 
-    if user and user.is_authenticated:
-        my_wishlist = get_wishlist_courses(user, limit=10)
-        my_attending_courses = get_attending_courses(user, limit=10)
-    else:
-        my_wishlist = Course.objects.none()
-        my_attending_courses = Course.objects.none()
-
     courses = {
         'popular_courses': get_popular_courses(limit=10),
         'new_courses': get_new_courses(days=60, limit=10),
-        'my_wishlist': my_wishlist,
-        'my_attending_courses': my_attending_courses,
+        'my_wishlist': get_wishlist_courses(user, limit=10),
+        'my_attending_courses': get_attending_courses(user, limit=10),
     }
 
     response_data = {
