@@ -114,7 +114,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
             capacity,
             view_count: item.view_count ?? 0,
             updated_at: item.updated_at ?? null,
-            rating: item.rating ?? "-",
+            rating: item.average_rating ?? item.rating ?? "-",
             available: enrolled < capacity, // 수강 인원 >= 정원이면 신청 불가 처리
             category: item.category_name || category || "전체",
           };
@@ -440,7 +440,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
                         <Text style={styles.capacity}>
                           {item.enrolled}/{item.capacity}
                         </Text>
-                        <Text style={styles.rating}>★ {item.average_rating ?? "-"}</Text>
+                        <Text style={styles.rating}>★ {item.rating ?? "-"}</Text>
                       </View>
                       {item.available && (
                         <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
