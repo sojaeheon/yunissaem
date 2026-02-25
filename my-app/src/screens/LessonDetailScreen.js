@@ -379,7 +379,38 @@ export default function LessonDetailScreen({ navigation, route }) {
         {/* 채팅하기 버튼 */}
         <TouchableOpacity
           style={[styles.footerBtn, { backgroundColor: "tomato" }]}
-          onPress={() => navigation.navigate("Chat", { lessonId: data.id })}
+          onPress={async () => {
+            try {
+              // 채팅방 생성 또는 기존 채팅방 반환
+              const response = await api.post("/chat/rooms/", {
+                course_id: data.id,
+                tutor_id: data.tutor?.id,
+              });
+
+              const { room_id, created } = response.data;
+
+              // 채팅 화면으로 이동
+              navigation.navigate("Chat", {
+                roomId: room_id,
+                courseTitle: data.title,
+                otherUserName: data.tutor?.name || data.tutor?.username,
+                otherUserId: data.tutor?.id,
+              });
+
+              if (created) {
+                console.log("✅ 새 채팅방이 생성되었습니다:", room_id);
+              }
+            } catch (error) {
+              console.error("❌ 채팅방 생성 실패:", error.response?.data || error);
+              if (error.response?.status === 401) {
+                Alert.alert("로그인 필요", "채팅을 시작하려면 로그인이 필요합니다.");
+              } else if (error.response?.status === 400) {
+                Alert.alert("오류", error.response?.data?.error || "채팅방을 만들 수 없습니다.");
+              } else {
+                Alert.alert("오류", "채팅방을 만드는 중 문제가 발생했습니다.");
+              }
+            }
+          }}
         >
           <Ionicons name="chatbubbles" size={20} color="#fff" />
           <Text style={styles.footerText}>채팅하기</Text>
