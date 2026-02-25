@@ -323,7 +323,8 @@ export default function CategoryLessonScreen({ navigation, route }) {
         <TextInput
           ref={searchInputRef}
           style={styles.searchBar}
-          placeholder="과외 검색하기"
+          placeholder={searchFocused ? "" : "과외 검색하기"}
+          placeholderTextColor="#5f6978"
           value={searchQuery}
           onChangeText={setSearchQuery}
           onFocus={() => {
