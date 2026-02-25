@@ -10,6 +10,9 @@ import {
   RefreshControl,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+
 import api from "../utils/axiosInstance";
 import { SERVER_BASE } from "../config/config";
 
@@ -19,18 +22,17 @@ export default function ChatListScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  // 채팅방 목록 가져오기
   const fetchChatRooms = async () => {
     try {
       setError(null);
-      const response = await api.get("/chat/rooms/");
+      const response = await api.get("/chat/rooms/list/");
       setChatRooms(response.data);
     } catch (err) {
-      console.error("채팅방 목록 조회 실패:", err);
+      console.error("Failed to fetch chat rooms:", err);
       if (err.response?.status === 401) {
         setError("로그인이 필요합니다.");
       } else {
-        setError("채팅방 목록을 불러오는데 실패했습니다.");
+        setError("채팅 목록을 불러오지 못했습니다.");
       }
     } finally {
       setLoading(false);
@@ -38,7 +40,6 @@ export default function ChatListScreen({ navigation }) {
     }
   };
 
-  // 화면에 포커스될 때마다 새로고침
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
@@ -46,48 +47,43 @@ export default function ChatListScreen({ navigation }) {
     }, [])
   );
 
-  // 당겨서 새로고침
   const onRefresh = () => {
     setRefreshing(true);
     fetchChatRooms();
   };
 
-  // 시간 포맷팅 (마지막 메시지 시간)
   const formatTime = (dateString) => {
     if (!dateString) return "";
+
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return "";
+
     const now = new Date();
     const diff = now - date;
     const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
-      // 오늘이면 시간만 표시
       return date.toLocaleTimeString("ko-KR", {
         hour: "2-digit",
         minute: "2-digit",
       });
-    } else if (diffDays === 1) {
-      return "어제";
-    } else if (diffDays < 7) {
-      return `${diffDays}일 전`;
-    } else {
-      return date.toLocaleDateString("ko-KR", {
-        month: "short",
-        day: "numeric",
-      });
     }
+    if (diffDays === 1) return "어제";
+    if (diffDays < 7) return `${diffDays}일 전`;
+
+    return date.toLocaleDateString("ko-KR", {
+      month: "short",
+      day: "numeric",
+    });
   };
 
-  // 채팅방 클릭 시 읽음 처리 후 이동
   const handleChatRoomPress = async (room) => {
     try {
-      // 읽음 처리 API 호출
-      await api.post(`/chat/rooms/${room.room_id}/`);
+      await api.post(`/chat/rooms/${room.room_id}/read/`);
     } catch (err) {
-      console.error("읽음 처리 실패:", err);
+      console.error("Failed to mark room as read:", err);
     }
 
-    // 채팅 화면으로 이동
     navigation.navigate("Chat", {
       roomId: room.room_id,
       courseTitle: room.course_title,
@@ -96,239 +92,296 @@ export default function ChatListScreen({ navigation }) {
     });
   };
 
-  // 로딩 화면
+  const renderHeader = () => (
+    <View style={styles.headerCard}>
+      <View>
+        <Text style={styles.headerEyebrow}>채팅함</Text>
+        <Text style={styles.headerTitle}>메시지</Text>
+        <Text style={styles.headerSubtitle}>{chatRooms.length}개의 대화</Text>
+      </View>
+    </View>
+  );
+
+  const renderRoomItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.chatCard}
+      activeOpacity={0.88}
+      onPress={() => handleChatRoomPress(item)}
+    >
+      <View style={styles.avatarWrap}>
+        {item.other_user_profile_image ? (
+          <Image
+            source={{
+              uri: item.other_user_profile_image.startsWith("http")
+                ? item.other_user_profile_image
+                : `${SERVER_BASE}${item.other_user_profile_image}`,
+            }}
+            style={styles.avatar}
+          />
+        ) : (
+          <View style={styles.avatarFallback}>
+            <Text style={styles.avatarFallbackText}>
+              {item.other_user_name?.charAt(0) || "?"}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.chatMain}>
+        <View style={styles.topRow}>
+          <Text style={styles.partnerName} numberOfLines={1}>
+            {item.other_user_name}
+          </Text>
+          <Text style={styles.timeText}>{formatTime(item.last_message_time)}</Text>
+        </View>
+
+        <View style={styles.courseChip}>
+          <Text style={styles.courseChipText} numberOfLines={1}>
+            {item.course_title}
+          </Text>
+        </View>
+
+        <View style={styles.bottomRow}>
+          <Text style={styles.lastMessage} numberOfLines={1}>
+            {item.last_message || "메시지가 없습니다."}
+          </Text>
+          {item.unread_message_count > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>
+                {item.unread_message_count > 99 ? "99+" : item.unread_message_count}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="tomato" />
-        <Text style={styles.loadingText}>채팅방 목록 불러오는 중...</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        {renderHeader()}
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color="#f25f4c" />
+          <Text style={styles.statusText}>채팅 목록을 불러오는 중...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
-  // 에러 화면
   if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchChatRooms}>
-          <Text style={styles.retryButtonText}>다시 시도</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        {renderHeader()}
+        <View style={styles.centerContent}>
+          <Ionicons name="warning-outline" size={26} color="#f25f4c" />
+          <Text style={styles.statusText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchChatRooms}>
+            <Text style={styles.retryButtonText}>다시 시도</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
-  // 빈 목록 화면
   if (chatRooms.length === 0) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.emptyIcon}>💬</Text>
-        <Text style={styles.emptyText}>아직 채팅방이 없습니다</Text>
-        <Text style={styles.emptySubText}>
-          과외를 신청하면 튜터와 채팅할 수 있어요!
-        </Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        {renderHeader()}
+        <View style={styles.centerContent}>
+          <Ionicons name="chatbox-ellipses-outline" size={34} color="#9ca3af" />
+          <Text style={styles.emptyTitle}>아직 채팅방이 없습니다</Text>
+          <Text style={styles.emptySubtitle}>과외 상세에서 채팅하기를 누르면 시작할 수 있어요.</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <FlatList
         data={chatRooms}
         keyExtractor={(item) => item.room_id.toString()}
+        renderItem={renderRoomItem}
+        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={renderHeader}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["tomato"]}
-            tintColor="tomato"
+            colors={["#f25f4c"]}
+            tintColor="#f25f4c"
           />
         }
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.chatItem}
-            onPress={() => handleChatRoomPress(item)}
-            activeOpacity={0.7}
-          >
-            {/* 프로필 이미지 */}
-            <View style={styles.profileContainer}>
-              {item.other_user_profile_image ? (
-                <Image
-                  source={{
-                    uri: item.other_user_profile_image.startsWith("http")
-                      ? item.other_user_profile_image
-                      : `${SERVER_BASE}${item.other_user_profile_image}`,
-                  }}
-                  style={styles.profileImage}
-                />
-              ) : (
-                <View style={styles.defaultProfile}>
-                  <Text style={styles.defaultProfileText}>
-                    {item.other_user_name?.charAt(0) || "?"}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* 채팅 정보 */}
-            <View style={styles.chatInfo}>
-              <View style={styles.topRow}>
-                <Text style={styles.partnerName} numberOfLines={1}>
-                  {item.other_user_name}
-                </Text>
-                <Text style={styles.time}>
-                  {formatTime(item.last_message_time)}
-                </Text>
-              </View>
-              <Text style={styles.courseTitle} numberOfLines={1}>
-                {item.course_title}
-              </Text>
-              <View style={styles.bottomRow}>
-                <Text style={styles.lastMessage} numberOfLines={1}>
-                  {item.last_message || "메시지가 없습니다"}
-                </Text>
-                {item.unread_message_count > 0 && (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadText}>
-                      {item.unread_message_count > 99
-                        ? "99+"
-                        : item.unread_message_count}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          </TouchableOpacity>
-        )}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f7f8fc",
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 20,
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 36,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: "#666",
-  },
-  errorText: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: "tomato",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-  },
-  retryButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  emptyIcon: {
-    fontSize: 60,
-    marginBottom: 15,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
-  },
-  emptySubText: {
-    fontSize: 14,
-    color: "#888",
-    textAlign: "center",
-  },
-  chatItem: {
+  headerCard: {
+    backgroundColor: "#1f2937",
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 16,
     flexDirection: "row",
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    alignItems: "center",
+    justifyContent: "flex-start",
   },
-  profileContainer: {
+  headerEyebrow: {
+    color: "#d1d5db",
+    fontSize: 12,
+    letterSpacing: 0.7,
+    marginBottom: 2,
+  },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 26,
+    fontWeight: "800",
+  },
+  headerSubtitle: {
+    color: "#cbd5e1",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  chatCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#111827",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  avatarWrap: {
     marginRight: 12,
   },
-  profileImage: {
-    width: 55,
-    height: 55,
-    borderRadius: 27.5,
+  avatar: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
   },
-  defaultProfile: {
-    width: 55,
-    height: 55,
-    borderRadius: 27.5,
-    backgroundColor: "#ff6347",
-    justifyContent: "center",
+  avatarFallback: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "#f25f4c",
     alignItems: "center",
-  },
-  defaultProfileText: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "bold",
-  },
-  chatInfo: {
-    flex: 1,
     justifyContent: "center",
+  },
+  avatarFallbackText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  chatMain: {
+    flex: 1,
   },
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 3,
+    marginBottom: 6,
+    gap: 8,
   },
   partnerName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
     flex: 1,
-    marginRight: 10,
+    color: "#111827",
+    fontSize: 16,
+    fontWeight: "700",
   },
-  time: {
+  timeText: {
+    color: "#6b7280",
     fontSize: 12,
-    color: "#999",
+    fontWeight: "500",
   },
-  courseTitle: {
-    fontSize: 13,
-    color: "tomato",
-    marginBottom: 4,
+  courseChip: {
+    alignSelf: "flex-start",
+    backgroundColor: "#fff3ef",
+    borderColor: "#ffd7cd",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    marginBottom: 8,
+    maxWidth: "88%",
+  },
+  courseChipText: {
+    color: "#d94832",
+    fontSize: 12,
+    fontWeight: "600",
   },
   bottomRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
   },
   lastMessage: {
-    fontSize: 14,
-    color: "#666",
     flex: 1,
-    marginRight: 10,
+    color: "#4b5563",
+    fontSize: 14,
   },
   unreadBadge: {
-    backgroundColor: "tomato",
-    borderRadius: 12,
     minWidth: 24,
     height: 24,
-    justifyContent: "center",
+    borderRadius: 12,
+    backgroundColor: "#f25f4c",
+    paddingHorizontal: 7,
     alignItems: "center",
-    paddingHorizontal: 6,
+    justifyContent: "center",
   },
-  unreadText: {
+  unreadBadgeText: {
     color: "#fff",
+    fontWeight: "700",
     fontSize: 12,
-    fontWeight: "bold",
+  },
+  centerContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  statusText: {
+    color: "#4b5563",
+    fontSize: 15,
+    marginTop: 10,
+  },
+  emptyTitle: {
+    marginTop: 10,
+    color: "#111827",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  emptySubtitle: {
+    marginTop: 6,
+    color: "#6b7280",
+    fontSize: 14,
+  },
+  retryButton: {
+    marginTop: 14,
+    backgroundColor: "#f25f4c",
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });
