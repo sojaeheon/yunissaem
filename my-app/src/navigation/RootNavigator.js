@@ -126,6 +126,11 @@ export default function RootNavigator() {
         <RootStack.Screen name="CategoryLesson" component={CategoryLessonScreen} options={{ title: "Category" }} />
         <RootStack.Screen name="LessonDetail" component={LessonDetailScreen} options={{ title: "Lesson Detail" }} />
         <RootStack.Screen
+          name="LessonCreateEdit"
+          component={LessonCreateScreen}
+          options={{ title: "Edit Lesson" }}
+        />
+        <RootStack.Screen
           name="AIChatbot"
           component={AIChatbotScreen}
           options={{ presentation: "transparentModal", headerShown: false }}
