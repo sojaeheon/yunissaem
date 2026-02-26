@@ -10,7 +10,7 @@
 // ⚠️ 주의: IP 변경 시 서버 재시작 필요
 // ⚠️ 주의: 배포 시에는 고정 IP 또는 도메인 사용 권장
 // ⚠️ 주의: 커밋 시 본인 IP가 노출되지 않도록 주의
-export const PC_IP = "localhost";
+export const PC_IP = "192.168.0.6";
 
 // API 엔드포인트 기본 주소
 // Note: nginx proxies '/' to the Django api, so the API root is at '/'
