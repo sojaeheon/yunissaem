@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
@@ -28,6 +29,8 @@ const SORT_OPTIONS = [
 
 export default function CategoryLessonScreen({ navigation, route }) {
   const { category = "전체", categoryId } = route.params || {};
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -190,6 +193,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
   const renderCard = ({ item }) => {
     const liked = favoriteIds.includes(item.id);
     const ratingText = item.rating === "-" ? "-" : Number(item.rating).toFixed(1);
+    const thumbSize = isCompact ? 82 : 96;
 
     return (
       <TouchableOpacity
@@ -204,7 +208,7 @@ export default function CategoryLessonScreen({ navigation, route }) {
                 item.thumbnail ||
                 "https://dummyimage.com/120x120/cccccc/000000&text=No+Image",
             }}
-            style={styles.thumbnail}
+            style={[styles.thumbnail, { width: thumbSize, height: thumbSize }]}
           />
 
           <View style={styles.cardContent}>
@@ -294,7 +298,10 @@ export default function CategoryLessonScreen({ navigation, route }) {
         </View>
 
         <View style={styles.dropdownWrap}>
-          <TouchableOpacity style={styles.dropdownButton} onPress={() => setDropdownVisible((v) => !v)}>
+          <TouchableOpacity
+            style={[styles.dropdownButton, isCompact && styles.dropdownButtonCompact]}
+            onPress={() => setDropdownVisible((v) => !v)}
+          >
             <Text style={styles.dropdownText}>{sortOption}</Text>
             <Ionicons name={dropdownVisible ? "chevron-up" : "chevron-down"} size={16} color="#334155" />
           </TouchableOpacity>
@@ -387,6 +394,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 14,
+    gap: 8,
+    flexWrap: "wrap",
   },
   switchWrap: {
     flexDirection: "row",
@@ -419,6 +428,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 10,
+  },
+  dropdownButtonCompact: {
+    minWidth: 96,
   },
   dropdownText: {
     fontSize: 13,
@@ -489,7 +501,7 @@ const styles = StyleSheet.create({
     padding: 10,
     minHeight: 126,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     shadowColor: "#0f172a",
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -500,16 +512,15 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   thumbnail: {
-    width: 96,
-    height: 96,
     borderRadius: 12,
     backgroundColor: "#e5e7eb",
     marginRight: 10,
   },
   cardContent: {
     flex: 1,
-    height: "100%",
+    minHeight: 96,
     justifyContent: "space-between",
+    paddingRight: 34,
   },
   lessonTitle: {
     fontSize: 16,
@@ -517,22 +528,26 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111827",
     marginTop: 4,
+    flexShrink: 1,
   },
   lessonTutor: {
     fontSize: 13,
     color: "#475569",
     marginTop: 2,
+    flexShrink: 1,
   },
   description: {
     fontSize: 12,
     color: "#6b7280",
     marginTop: 4,
+    flexShrink: 1,
   },
   metaRow: {
     marginTop: 8,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    flexWrap: "wrap",
   },
   metaPill: {
     flexDirection: "row",
@@ -555,18 +570,21 @@ const styles = StyleSheet.create({
     color: "#92400e",
   },
   heartButton: {
-    marginLeft: 8,
-    alignSelf: "flex-end",
+    position: "absolute",
+    top: 8,
+    right: 8,
+    padding: 4,
   },
   unavailableBadge: {
-    marginLeft: 8,
+    position: "absolute",
+    top: 8,
+    right: 8,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
     backgroundColor: "#fee2e2",
     borderWidth: 1,
     borderColor: "#fca5a5",
-    alignSelf: "flex-end",
   },
   unavailableText: {
     fontSize: 11,
