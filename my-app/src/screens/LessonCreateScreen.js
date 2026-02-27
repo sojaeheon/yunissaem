@@ -19,6 +19,10 @@ import { BASE_URL } from "../config/config";
 import { getAccessToken } from "../utils/tokenStorage";
 
 export default function LessonCreateScreen({ navigation, route }) {
+  const editMode = !!route?.params?.editMode;
+  const lessonData = route?.params?.lessonData || null;
+  const returnToLessonId = route?.params?.returnToLessonId ?? lessonData?.id ?? null;
+
   // ===== State 관리 =====
   const [title, setTitle] = useState(""); // 과외 제목
   const [capacity, setCapacity] = useState(""); // 수강 인원
@@ -50,21 +54,52 @@ export default function LessonCreateScreen({ navigation, route }) {
     }
   };
 
+  const moveToLessonDetail = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    if (returnToLessonId) {
+      navigation.navigate("LessonDetail", { lessonId: returnToLessonId });
+      return;
+    }
+
+    navigation.navigate("Home");
+  };
+
   // ===== 헤더 설정 =====
   // 화면 상단에 "강의 생성" 제목과 뒤로가기 버튼 표시
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: true,
-      title: "강의 생성",
+      title: editMode ? "강의 수정" : "강의 생성",
       headerTitleAlign: "center",
       headerBackTitleVisible: false,
       headerLeft: () => (
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8, marginLeft: 6 }}>
+        <TouchableOpacity
+          onPress={() => (editMode ? moveToLessonDetail() : navigation.goBack())}
+          style={{ padding: 8, marginLeft: 6 }}
+        >
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
       ),
     });
-  }, [navigation]);
+  }, [navigation, editMode, returnToLessonId]);
+
+  // ===== 수정 모드 초기값 세팅 =====
+  useEffect(() => {
+    if (!editMode || !lessonData) return;
+
+    setTitle(lessonData.title || "");
+    setCapacity(String(lessonData.max_tutees ?? ""));
+    setIntro(lessonData.description || "");
+    setCurriculum(lessonData.curriculum || "");
+    setTutorIntro("");
+
+    // lessonData.thumbnail_image_url 또는 thumbnail 둘 다 허용
+    setThumbnail(lessonData.thumbnail_image_url || lessonData.thumbnail || null);
+  }, [editMode, lessonData]);
 
   // ===== 이미지 권한 요청 (앱 실행 시 1회) =====
   // 웹에서는 스킵, 네이티브 앱에서만 갤러리 접근 권한 요청
@@ -92,7 +127,7 @@ export default function LessonCreateScreen({ navigation, route }) {
       return;
     }
 
-    if (!tutorIntro.trim()) {
+    if (!editMode && !tutorIntro.trim()) {
       showAlert("입력 오류", "강사 소개를 입력해주세요.");
       return;
     }
@@ -114,7 +149,10 @@ export default function LessonCreateScreen({ navigation, route }) {
       // Android 에뮬레이터: 10.0.2.2 (로컬호스트 주소)
       // 그 외: localhost
       const apiBase = Platform.OS === "android" ? "http://10.0.2.2:80" : BASE_URL;
-      const endpoint = `${apiBase}/courses/create/`;
+      const endpoint =
+        editMode && lessonData?.id
+          ? `${apiBase}/courses/${lessonData.id}/`
+          : `${apiBase}/courses/create/`;
 
       // Auth 토큰 가져오기
       const access = await getAccessToken();
@@ -145,29 +183,40 @@ export default function LessonCreateScreen({ navigation, route }) {
         }
       };
 
-      const payload = parseJwt(access);
-      if (!payload || (!payload.user_id && !payload.id && !payload.sub)) {
-        setLoading(false);
-        showAlert("오류", "토큰에서 사용자 정보를 추출할 수 없습니다.");
-        return;
+      let tutorId = null;
+      if (!editMode) {
+        const payload = parseJwt(access);
+        if (!payload || (!payload.user_id && !payload.id && !payload.sub)) {
+          setLoading(false);
+          showAlert("오류", "토큰에서 사용자 정보를 추출할 수 없습니다.");
+          return;
+        }
+        // Simple fallback: try common claim names
+        tutorId = payload.user_id ?? payload.id ?? payload.sub;
       }
-      // Simple fallback: try common claim names
-      const tutorId = payload.user_id ?? payload.id ?? payload.sub;
 
       const headers = { Accept: "application/json" };
       headers.Authorization = `Bearer ${access}`;
 
-      // FormData 생성 (tutor에 파싱한 id 사용)
+      // FormData 생성
       const form = new FormData();
-      form.append("tutor", String(tutorId));
-      form.append("category", String(categoryId));
       form.append("title", title);
       form.append("description", intro || "");
       form.append("curriculum", curriculum || "");
       form.append("max_tutees", String(parseInt(capacity, 10) || 1)); // 최대 인원
 
-      // 썸네일 이미지 파일 추가 (ImageField로 변경됨)
-      if (thumbnail) {
+      if (!editMode) {
+        form.append("tutor", String(tutorId));
+        form.append("category", String(categoryId));
+      }
+
+      const isLocalImageUri =
+        typeof thumbnail === "string" &&
+        (thumbnail.startsWith("file:") || thumbnail.startsWith("content:") || thumbnail.startsWith("blob:"));
+
+      // 썸네일 이미지 파일 추가
+      // 수정 모드에서는 기존 원격 URL을 다시 업로드하지 않고, 새로 선택한 로컬 이미지만 전송한다.
+      if (thumbnail && (!editMode || isLocalImageUri)) {
         const uriParts = thumbnail.split('/');
         const fileName = uriParts[uriParts.length - 1].split('?')[0] || 'photo.jpg';
         const match = /\.(\w+)$/.exec(fileName);
@@ -201,7 +250,7 @@ export default function LessonCreateScreen({ navigation, route }) {
       // 4. 백엔드 API 호출
       // multipart/form-data 전송 시 Content-Type 헤더를 직접 설정하지 않음
       const res = await fetch(endpoint, {
-        method: "POST",
+        method: editMode ? "PATCH" : "POST",
         body: form,
         headers,
       });
@@ -214,7 +263,7 @@ export default function LessonCreateScreen({ navigation, route }) {
         return;
       }
 
-      // 6. 성공 시 폼 초기화 후 Home 화면으로 이동
+      // 6. 성공 시 폼 초기화/이동
       setTitle("");
       setCapacity("");
       setTutorIntro("");
@@ -222,7 +271,12 @@ export default function LessonCreateScreen({ navigation, route }) {
       setCurriculum("");
       setThumbnail(null);
       setCategoryId("2");
-      navigation.navigate("Home");
+
+      if (editMode && lessonData?.id) {
+        moveToLessonDetail();
+      } else {
+        navigation.navigate("Home");
+      }
       
     } catch (e) {
       // 7. 네트워크 에러 등 예외 처리
@@ -291,19 +345,23 @@ export default function LessonCreateScreen({ navigation, route }) {
           )}
         </TouchableOpacity>
 
-        {/* 카테고리 선택 */}
-        <Text style={styles.label}>카테고리를 선택해주세요</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={categoryId}
-            onValueChange={(itemValue) => setCategoryId(itemValue)}
-            style={styles.picker}
-          >
-            {categories.map((cat) => (
-              <Picker.Item key={cat.id} label={cat.name} value={String(cat.id)} />
-            ))}
-          </Picker>
-        </View>
+        {/* 카테고리 선택: 생성 모드에서만 표시 */}
+        {!editMode && (
+          <>
+            <Text style={styles.label}>카테고리를 선택해주세요</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={categoryId}
+                onValueChange={(itemValue) => setCategoryId(itemValue)}
+                style={styles.picker}
+              >
+                {categories.map((cat) => (
+                  <Picker.Item key={cat.id} label={cat.name} value={String(cat.id)} />
+                ))}
+              </Picker>
+            </View>
+          </>
+        )}
 
         {/* 제목 입력 */}
         <Text style={styles.label}>어떤 제목으로 올릴까요?</Text>
@@ -327,16 +385,20 @@ export default function LessonCreateScreen({ navigation, route }) {
           keyboardType="numeric"
         />
 
-        {/* 강사 소개 입력 */}
-        <Text style={styles.label}>자신을 소개해 주세요!</Text>
-        <TextInput
-          style={[styles.input, { height: 150 }]}
-          placeholder="본인에 대한 소개글을 작성해주세요. (전공/전문 분야 등)"
-          placeholderTextColor="#9e9e9e"
-          value={tutorIntro}
-          onChangeText={setTutorIntro}
-          multiline
-        />
+        {/* 강사 소개 입력: 생성 모드에서만 필수/표시 */}
+        {!editMode && (
+          <>
+            <Text style={styles.label}>자신을 소개해 주세요!</Text>
+            <TextInput
+              style={[styles.input, { height: 150 }]}
+              placeholder="본인에 대한 소개글을 작성해주세요. (전공/전문 분야 등)"
+              placeholderTextColor="#9e9e9e"
+              value={tutorIntro}
+              onChangeText={setTutorIntro}
+              multiline
+            />
+          </>
+        )}
 
         {/* 강의 소개 입력 */}
         <Text style={styles.label}>어떤 강의인지 소개해주세요!</Text>
@@ -362,7 +424,11 @@ export default function LessonCreateScreen({ navigation, route }) {
 
         {/* 업로드 버튼 */}
         <View style={{ marginTop: 20 }}>
-          <Button title={loading ? "업로드 중..." : "과외 업로드"} onPress={handleUpload} disabled={loading} />
+          <Button
+            title={loading ? (editMode ? "수정 중..." : "업로드 중...") : (editMode ? "수정 저장" : "과외 업로드")}
+            onPress={handleUpload}
+            disabled={loading}
+          />
           {/* 로딩 중일 때 스피너 표시 */}
           {loading && (
             <View style={{ marginTop: 10, alignItems: "center" }}>
