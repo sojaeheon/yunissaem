@@ -69,12 +69,12 @@ class TutorIntroductionSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField()
     profile_image = serializers.ReadOnlyField()
     
-    # TutorProfile 모델에서 가져올 필드
-    experience = serializers.CharField(source='tutor_profile.experience', read_only=True)
+    # TutorProfile 모델에서 가져올 필드 - profile이 없을 경우를 대비해 null을 허용함
+    experience = serializers.CharField(source='tutor_profile.experience', read_only=True, default="")
 
     class Meta:
         model = User
-        fields = ['name', 'profile_image', 'experience']
+        fields = ['id', 'name', 'profile_image', 'experience']
     
 # 조회 / 변경 별도 제공 <= 접근 권한이 다르기 때문
 class TutorProfileUpdateSerializer(serializers.ModelSerializer):

@@ -103,7 +103,7 @@ class MyPageDetailView(generics.RetrieveUpdateAPIView):
 User = get_user_model()
 
 class TutorPublicDetailView(generics.RetrieveAPIView):
-    queryset = User.objects.all()
+    queryset = User.objects.select_related('tutor_profile').all()
     serializer_class = TutorIntroductionSerializer
     lookup_field = 'id' # /tutors/1/ 형태로 접근
 
