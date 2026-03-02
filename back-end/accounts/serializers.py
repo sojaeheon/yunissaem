@@ -74,7 +74,7 @@ class TutorIntroductionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'name', 'profile_image', 'experience']
+        fields = ['id', 'username', 'name', 'profile_image', 'bio', 'experience']
     
 # 조회 / 변경 별도 제공 <= 접근 권한이 다르기 때문
 class TutorProfileUpdateSerializer(serializers.ModelSerializer):
