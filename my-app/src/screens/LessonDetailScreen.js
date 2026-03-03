@@ -26,7 +26,7 @@
   - useLayoutEffect를 사용해 data.title이 로딩되면 네비게이션 헤더 제목을 과외 제목으로 동기화합니다.
 */
 
-import { useLayoutEffect } from "react";
+import React, { useLayoutEffect } from "react";
 import { useEffect, useState } from "react";
 import {
   View,
@@ -39,9 +39,9 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import axios from "axios";
 import api from "../utils/axiosInstance";
-import { BASE_URL } from "../config/config";
+import { BASE_URL, SERVER_BASE } from "../config/config";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function LessonDetailScreen({ navigation, route }) {
   // 🔹 Home / Category / Intro 등에서 넘어온 param
@@ -57,6 +57,12 @@ export default function LessonDetailScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true);
   // 찜 여부 (백엔드 응답의 is_wished와 동기화)
   const [isWished, setIsWished] = useState(false);
+
+  const STATUS_LABELS = {
+    recruiting: "모집중",
+    in_progress: "진행중",
+    finished: "종료",
+  };
 
   // ===========================================================
   // 1. 과외 상세 조회
@@ -159,6 +165,14 @@ export default function LessonDetailScreen({ navigation, route }) {
     fetchLessonDetail();
   }, [courseId]);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      if (courseId) {
+        fetchLessonDetail();
+      }
+    }, [courseId])
+  );
+
   // ===========================================================
   // 6. 헤더 타이틀 동기화
   //    데이터가 로딩되어 title이 존재하면 네비게이션 헤더 제목 변경
@@ -200,39 +214,54 @@ export default function LessonDetailScreen({ navigation, route }) {
     );
   }
 
+  const thumbnailUri =
+    typeof data.thumbnail_image_url === "string" && data.thumbnail_image_url.startsWith("/")
+      ? `${SERVER_BASE}${data.thumbnail_image_url}`
+      : data.thumbnail_image_url;
+
+  const statusLabel = STATUS_LABELS[data.status] || data.status;
+
   // ===========================================================
   // 8. 실제 렌더링 영역
   // ===========================================================
   return (
-    <ScrollView style={styles.container}>
-      {/* ====================== 썸네일 이미지 ====================== */}
-      <Image
-        source={{ uri: data.thumbnail_image_url }}
-        style={styles.thumbnail}
-      />
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <View style={styles.heroCard}>
+        <Image source={{ uri: thumbnailUri }} style={styles.thumbnail} />
+        <View style={styles.heroTopRow}>
+          <View style={styles.statusPill}>
+            <Text style={styles.statusPillText}>{statusLabel}</Text>
+          </View>
+          <TouchableOpacity onPress={toggleWish} style={styles.wishBtn}>
+            <Ionicons
+              name={isWished ? "heart" : "heart-outline"}
+              size={22}
+              color={isWished ? "#ef4444" : "#64748b"}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-      {/* ================= 썸네일 하단 튜터용 관리 버튼 =================
-          ※ 현재는 (data.is_owner || true) 로 항상 노출되도록 되어 있으며,
-            추후 로그인/권한이 붙으면 data.is_owner만 체크하도록 수정 예정. */}
-      {(data.is_owner || true) && (
-        <View style={styles.thumbnailButtons}>
+      {data.is_owner && (
+        <View style={styles.ownerActionRow}>
           {/* 1) 과외 수정 버튼 */}
           <TouchableOpacity
-            style={[styles.thumbBtn, { backgroundColor: "#ffa502" }]}
+            style={[styles.ownerActionBtn, { backgroundColor: "#f59e0b" }]}
             onPress={() =>
-              navigation.navigate("LessonCreate", {
+              navigation.navigate("LessonCreateEdit", {
                 editMode: true, // LessonCreateScreen에서 편집 모드로 인식하게 할 플래그
                 lessonData: data, // 기존 과외 데이터를 그대로 넘겨줌
+                returnToLessonId: data.id,
               })
             }
           >
-            <Ionicons name="create-outline" size={20} color="#fff" />
-            <Text style={styles.thumbLabel}>수정</Text>
+            <Ionicons name="create-outline" size={16} color="#fff" />
+            <Text style={styles.ownerActionText}>수정</Text>
           </TouchableOpacity>
 
           {/* 2) 상태 토글 버튼 (recruiting ↔ in_progress) */}
           <TouchableOpacity
-            style={[styles.thumbBtn, { backgroundColor: "#1e90ff" }]}
+            style={[styles.ownerActionBtn, { backgroundColor: "#2563eb" }]}
             onPress={async () => {
               try {
                 // 현재 상태에 따라 다음 상태 계산
@@ -241,7 +270,7 @@ export default function LessonDetailScreen({ navigation, route }) {
                 else if (data.status === "in_progress") nextStatus = "recruiting";
 
                 // 서버에 상태 변경 PATCH 요청
-                const res = await axios.patch(
+                const res = await api.patch(
                   `${BASE_URL}/courses/${courseId}/status/`,
                   { status: nextStatus }
                 );
@@ -255,8 +284,8 @@ export default function LessonDetailScreen({ navigation, route }) {
               }
             }}
           >
-            <Ionicons name="sync-outline" size={20} color="#fff" />
-            <Text style={styles.thumbLabel}>
+            <Ionicons name="sync-outline" size={16} color="#fff" />
+            <Text style={styles.ownerActionText}>
               {/* 버튼 라벨은 현재 상태에 따라 반대로 표시 (진행중 → 모집중, 모집중 → 진행중) */}
               {data.status === "in_progress" ? "모집중" : "진행중"}
             </Text>
@@ -264,7 +293,7 @@ export default function LessonDetailScreen({ navigation, route }) {
 
           {/* 3) 과외 종료 버튼 */}
           <TouchableOpacity
-            style={[styles.thumbBtn, { backgroundColor: "tomato" }]}
+            style={[styles.ownerActionBtn, { backgroundColor: "#ef4444" }]}
             onPress={async () => {
               // 수강생이 한 명이라도 있으면 종료 불가
               if (data.current_tutees_count > 0) {
@@ -276,7 +305,7 @@ export default function LessonDetailScreen({ navigation, route }) {
               }
 
               try {
-                const res = await axios.patch(
+                const res = await api.patch(
                   `${BASE_URL}/courses/${courseId}/status/`,
                   { status: "finished" }
                 );
@@ -291,97 +320,111 @@ export default function LessonDetailScreen({ navigation, route }) {
               }
             }}
           >
-            <Ionicons name="stop-circle-outline" size={20} color="#fff" />
-            <Text style={styles.thumbLabel}>종료</Text>
+            <Ionicons name="stop-circle-outline" size={16} color="#fff" />
+            <Text style={styles.ownerActionText}>종료</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* ================== 제목 + 찜(하트) 버튼 영역 ================== */}
-      <View style={styles.row}>
+      <View style={styles.infoCard}>
         <Text style={styles.title}>{data.title}</Text>
-
-        {/* 찜 토글 아이콘 */}
-        <TouchableOpacity onPress={toggleWish}>
-          <Ionicons
-            name={isWished ? "heart" : "heart-outline"}
-            size={28}
-            color={isWished ? "tomato" : "#aaa"}
-            style={{ marginLeft: 8, marginBottom: 2 }}
-          />
-        </TouchableOpacity>
+        <Text style={styles.tutor}>튜터: {data.tutor?.username || data.tutor?.name}</Text>
+        <View style={styles.metaChipRow}>
+          <View style={styles.metaChip}>
+            <Ionicons name="people-outline" size={14} color="#475569" />
+            <Text style={styles.metaChipText}>
+              {data.current_tutees_count}/{data.max_tutees}
+            </Text>
+          </View>
+          <View style={styles.metaChip}>
+            <Ionicons name="eye-outline" size={14} color="#475569" />
+            <Text style={styles.metaChipText}>{data.view_count ?? 0}</Text>
+          </View>
+        </View>
       </View>
 
-      {/* ================== 튜터 / 인원 / 상태 정보 ================== */}
-      <Text style={styles.tutor}>
-        튜터: {data.tutor?.username || data.tutor?.name}
-      </Text>
-      <Text style={styles.capacity}>
-        수강 가능 인원: {data.current_tutees_count}/{data.max_tutees}
-      </Text>
-      <Text style={styles.status}>상태: {data.status}</Text>
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>소개</Text>
+        <Text style={styles.text}>{data.description || "소개글이 없습니다."}</Text>
+      </View>
 
-      {/* ====================== 소개 섹션 ====================== */}
-      <Text style={styles.sectionTitle}>소개</Text>
-      <Text style={styles.text}>
-        {data.description || "소개글이 없습니다."}
-      </Text>
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>커리큘럼</Text>
+        <Text style={styles.text}>{data.curriculum || "커리큘럼 정보가 없습니다."}</Text>
+      </View>
 
-      {/* ===================== 커리큘럼 섹션 ===================== */}
-      <Text style={styles.sectionTitle}>커리큘럼</Text>
-      <Text style={styles.text}>
-        {data.curriculum || "커리큘럼 정보가 없습니다."}
-      </Text>
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>리뷰 ({data.reviews?.length || 0})</Text>
 
-      {/* ====================== 리뷰 섹션 ======================= */}
-      <Text style={styles.sectionTitle}>
-        리뷰 ⭐ ({data.reviews?.length || 0})
-      </Text>
+        {data.reviews && data.reviews.length > 0 ? (
+          data.reviews.map((review) => (
+            <View key={review.id} style={styles.reviewCard}>
+              <Text style={styles.reviewUser}>
+                {review.user_name || "익명"} ({"⭐".repeat(review.rating)})
+              </Text>
+              <Text style={styles.reviewText}>{review.comment}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyReview}>아직 리뷰가 없습니다.</Text>
+        )}
+      </View>
 
-      {data.reviews && data.reviews.length > 0 ? (
-        // 리뷰가 하나 이상 있을 때
-        data.reviews.map((review) => (
-          <View key={review.id} style={styles.reviewCard}>
-            <Text style={styles.reviewUser}>
-              {/* user_name이 없을 경우 익명으로 표시 */}
-              {review.user_name || "익명"} ({"⭐".repeat(review.rating)})
-            </Text>
-            <Text>{review.comment}</Text>
-          </View>
-        ))
-      ) : (
-        // 리뷰가 없을 때
-        <Text style={{ color: "gray" }}>아직 리뷰가 없습니다.</Text>
-      )}
-
-      {/* ===================== 하단 액션 버튼들 ===================== */}
       <View style={styles.footer}>
-        {/* 리뷰 작성 버튼 */}
         <TouchableOpacity
-          style={[styles.footerBtn, { backgroundColor: "blue" }]}
-          onPress={() => navigation.navigate("ReviewWrite")}
+          style={[styles.footerBtn, { backgroundColor: "#2563eb" }]}
+          onPress={() => navigation.navigate("ReviewWrite", { lessonId: data.id, courseId: data.id })}
         >
-          <Ionicons name="star" size={20} color="#fff" />
+          <Ionicons name="star" size={18} color="#fff" />
           <Text style={styles.footerText}>리뷰 작성</Text>
         </TouchableOpacity>
 
-        {/* 수강 신청 버튼 (아직 미구현) */}
         <TouchableOpacity
-          style={[styles.footerBtn, { backgroundColor: "gray" }]}
+          style={[styles.footerBtn, { backgroundColor: "#6b7280" }]}
           onPress={() =>
             Alert.alert("준비 중", "수강 신청 기능은 나중에 구현됩니다.")
           }
         >
-          <Ionicons name="school" size={20} color="#fff" />
+          <Ionicons name="school" size={18} color="#fff" />
           <Text style={styles.footerText}>수강 신청</Text>
         </TouchableOpacity>
 
-        {/* 채팅하기 버튼 */}
         <TouchableOpacity
-          style={[styles.footerBtn, { backgroundColor: "tomato" }]}
-          onPress={() => navigation.navigate("Chat", { lessonId: data.id })}
+          style={[styles.footerBtn, { backgroundColor: "#ef4444" }]}
+          onPress={async () => {
+            try {
+              // 채팅방 생성 또는 기존 채팅방 반환
+              const response = await api.post("/chat/rooms/", {
+                course_id: data.id,
+                tutor_id: data.tutor?.id,
+              });
+
+              const { room_id, created } = response.data;
+
+              // 채팅 화면으로 이동
+              navigation.navigate("Chat", {
+                roomId: room_id,
+                courseTitle: data.title,
+                otherUserName: data.tutor?.name || data.tutor?.username,
+                otherUserId: data.tutor?.id,
+              });
+
+              if (created) {
+                console.log("✅ 새 채팅방이 생성되었습니다:", room_id);
+              }
+            } catch (error) {
+              console.error("❌ 채팅방 생성 실패:", error.response?.data || error);
+              if (error.response?.status === 401) {
+                Alert.alert("로그인 필요", "채팅을 시작하려면 로그인이 필요합니다.");
+              } else if (error.response?.status === 400) {
+                Alert.alert("오류", error.response?.data?.error || "채팅방을 만들 수 없습니다.");
+              } else {
+                Alert.alert("오류", "채팅방을 만드는 중 문제가 발생했습니다.");
+              }
+            }
+          }}
         >
-          <Ionicons name="chatbubbles" size={20} color="#fff" />
+          <Ionicons name="chatbubbles" size={18} color="#fff" />
           <Text style={styles.footerText}>채팅하기</Text>
         </TouchableOpacity>
       </View>
@@ -393,105 +436,130 @@ export default function LessonDetailScreen({ navigation, route }) {
 // 스타일 정의
 // -----------------------------------------------------------
 const styles = StyleSheet.create({
-  // 화면 전체 컨테이너
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
-
-  // 상단 썸네일 이미지
+  container: { flex: 1, backgroundColor: "#f3f6fb" },
+  contentContainer: { padding: 14, paddingBottom: 28 },
+  heroCard: {
+    borderRadius: 18,
+    overflow: "hidden",
+    backgroundColor: "#dbe3ef",
+    marginBottom: 10,
+  },
   thumbnail: {
     width: "100%",
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 16,
+    height: 214,
   },
-
-  // 제목 + 찜 아이콘을 가로로 배치
-  row: {
+  heroTopRow: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    right: 10,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-
-  // 과외 제목
-  title: { fontSize: 22, fontWeight: "bold", flex: 1 },
-
-  // 튜터 이름
-  tutor: { fontSize: 16, marginTop: 8 },
-
-  // 수강 인원 표시
-  capacity: { fontSize: 14, color: "gray", marginTop: 4 },
-
-  // 과외 상태 텍스트
-  status: { fontSize: 15, fontWeight: "600", marginTop: 6, color: "#444" },
-
-  // 섹션 타이틀 (소개, 커리큘럼, 리뷰 등)
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 20,
-    marginBottom: 6,
+  statusPill: {
+    backgroundColor: "rgba(15, 23, 42, 0.82)",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
-
-  // 본문 텍스트 스타일
-  text: { fontSize: 15, lineHeight: 22 },
-
-  // 리뷰 카드 박스
-  reviewCard: {
-    backgroundColor: "#f2f2f2",
-    padding: 10,
-    borderRadius: 6,
-    marginVertical: 5,
+  statusPillText: {
+    color: "#f8fafc",
+    fontSize: 12,
+    fontWeight: "700",
   },
-
-  // 리뷰 작성자 이름 + 별점
-  reviewUser: { fontWeight: "bold", marginBottom: 4 },
-
-  // 튜터 전용 관리 버튼 래퍼 (썸네일 아래)
-  thumbnailButtons: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
+  wishBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.9)",
     alignItems: "center",
-    marginTop: 8,
-    marginBottom: 10,
-    gap: 10, // 버튼 간격
+    justifyContent: "center",
   },
-
-  // 개별 원형 관리 버튼
-  thumbBtn: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  ownerActionRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 10,
+  },
+  ownerActionBtn: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 8,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    gap: 5,
   },
-
-  // 관리 버튼 라벨 텍스트
-  thumbLabel: {
+  ownerActionText: {
     color: "#fff",
-    fontSize: 11,
-    fontWeight: "600",
-    marginTop: 2,
+    fontSize: 12.5,
+    fontWeight: "700",
   },
-
-  // 하단 액션 버튼 컨테이너 (리뷰작성 / 수강신청 / 채팅)
-  footer: {
+  infoCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#e3eaf4",
+    padding: 14,
+    marginBottom: 10,
+  },
+  title: { fontSize: 22, lineHeight: 28, fontWeight: "800", color: "#111827", marginBottom: 4 },
+  tutor: { fontSize: 15, color: "#475569", marginBottom: 10 },
+  metaChipRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 30,
-    marginBottom: 50,
+    gap: 8,
   },
-
-  // 개별 하단 버튼 스타일
-  footerBtn: {
+  metaChip: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    borderRadius: 8,
+    borderRadius: 999,
+    backgroundColor: "#eef2f7",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 5,
   },
-
-  // 하단 버튼 텍스트
-  footerText: { color: "#fff", marginLeft: 6, fontWeight: "bold" },
+  metaChipText: {
+    fontSize: 12,
+    color: "#334155",
+    fontWeight: "700",
+  },
+  sectionCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#e3eaf4",
+    padding: 14,
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#1e293b",
+    marginBottom: 8,
+  },
+  text: { fontSize: 14, lineHeight: 22, color: "#334155" },
+  reviewCard: {
+    backgroundColor: "#f8fafc",
+    padding: 11,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginTop: 8,
+  },
+  reviewUser: { fontWeight: "700", marginBottom: 3, color: "#0f172a" },
+  reviewText: { color: "#334155", lineHeight: 20, fontSize: 13.5 },
+  emptyReview: { color: "#64748b", fontSize: 13.5 },
+  footer: {
+    marginTop: 4,
+    gap: 8,
+  },
+  footerBtn: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 7,
+  },
+  footerText: { color: "#fff", fontWeight: "700", fontSize: 14.5 },
 });

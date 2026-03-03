@@ -7,9 +7,15 @@ from django.contrib.auth import get_user_model
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+<<<<<<< HEAD
 from .models import TutorProfile
 from .serializers import UserRegisterSerializer, ProfileSerializer, TutorIntroductionSerializer, TutorProfileUpdateSerializer
 
+=======
+
+from .serializers import UserRegisterSerializer, ProfileSerializer, UserDetailSerializer, TutorProfileUpdateSerializer
+from .models import User
+>>>>>>> develop
 
 # =========================================================
 # 👤 회원가입 API
@@ -62,15 +68,21 @@ def register_view(request):
 
 
 # =========================================================
-# 🙋 마이페이지 조회 / 수정 API
+# 마이페이지 조회 / 수정 API
 # =========================================================
 class MyPageDetailView(generics.RetrieveUpdateAPIView):
     """
-    GET  : 내 프로필 조회
+    GET  : 내 프로필 조회 - tutor_intro가 있으면 포함
     PATCH: 내 프로필 수정
     """
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        # GET 요청(조회) 시에는 tutor_intro 유무를 체크하는 UserDetailSerializer 사용
+        if self.request.method == 'GET':
+            return UserDetailSerializer
+        return ProfileSerializer
 
     def get_object(self):
         # 현재 로그인한 유저만 접근 가능
@@ -85,16 +97,35 @@ class MyPageDetailView(generics.RetrieveUpdateAPIView):
     @swagger_auto_schema(
         operation_summary="마이페이지 조회",
         operation_description="현재 로그인한 사용자의 프로필을 조회합니다.",
-        responses={200: ProfileSerializer}
+        responses={200: UserDetailSerializer}   # ProfileSerializer에서 변경
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+# =========================================================
+# 튜터 설정 API (본인 경력 수정)
+# =========================================================
+class MyTutorSettingsView(generics.RetrieveUpdateAPIView):
+    """
+    GET  : 내 튜터 정보 조회
+    PATCH: 내 튜터 정보(tutor_intro) 수정
+    """
+    serializer_class = TutorProfileUpdateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+
     @swagger_auto_schema(
-        operation_summary="마이페이지 수정",
-        operation_description="현재 로그인한 사용자의 프로필을 수정합니다.",
-        request_body=ProfileSerializer,
-        responses={200: ProfileSerializer}
+        operation_summary="튜터 설정 수정",
+        operation_description="본인의 튜터 소개 내용을 수정합니다. 비밀번호 확인이 필요합니다.",
+        request_body=TutorProfileUpdateSerializer,
+        responses={200: TutorProfileUpdateSerializer}
     )
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
