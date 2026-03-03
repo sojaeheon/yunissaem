@@ -27,6 +27,7 @@ urlpatterns = [
     path('my/', include('accounts.urls')),
     path('home/', include('main.urls')),
     path("chat/", include("chattings.urls")),
+    path('reviews/', include('reviews.urls')),
 
     # Swagger API 문서
     path(

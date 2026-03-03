@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import TutorProfile    # Tutor 소개 페이지 API 구축
+from courses.models import Course   # 과외 목록 가져오기 위함
 
 User = get_user_model()
 
@@ -67,60 +69,56 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         # 2. 비밀번호 일치 여부 확인
         user = self.context['request'].user
-        if not user.check_password(current_password):
-            raise serializers.ValidationError({"current_password": "비밀번호가 일치하지 않습니다."})
+        # Django의 check_password 함수로 해싱된 비밀번호와 비교
+        if not user.check_password(value):
+            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
+        return value
+    
+class TutorIntroductionSerializer(serializers.ModelSerializer):
+    # User 모델에서 가져올 필드
+    name = serializers.ReadOnlyField()
+    profile_image = serializers.ReadOnlyField()
+    
+    # TutorProfile 모델에서 가져올 필드 - profile이 없을 경우를 대비해 null을 허용함
+    experience = serializers.CharField(source='tutor_profile.experience', read_only=True, default="")
 
-        return data
-
-    def update(self, instance, validated_data):
-        # 업데이트 직전, 모델 필드에 없는 current_password는 제거
-        validated_data.pop('current_password', None)
-        return super().update(instance, validated_data)
-
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'name', 'profile_image', 'bio', 'experience']
+    
+# 조회 / 변경 별도 제공 <= 접근 권한이 다르기 때문
 class TutorProfileUpdateSerializer(serializers.ModelSerializer):
-    # 수정 시 보안을 위한 비밀번호 확인 필드
+    # User 모델 필드 가져오기
+    name = serializers.CharField(source='user.name', read_only=True) 
+    profile_image = serializers.URLField(source='user.profile_image', required=False)
+    
+    # 튜터 전용 필드 (경력 등)
+    experience = serializers.CharField(required=True)
+    
+    # 검증용 비밀번호
     current_password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
-        model = User
-        # 튜터 페이지에서 수정할 필드들
-        fields = ['name', 'profile_image', 'tutor_intro', 'current_password']
+        model = TutorProfile
+        fields = ['name', 'profile_image', 'experience', 'current_password']
 
-    def validate(self, data):
-        # 1. PATCH 요청 시에도 비밀번호가 누락되지 않았는지 강제 확인
-        if 'current_password' not in data:
-            raise serializers.ValidationError({"current_password": "본인 확인을 위해 비밀번호를 입력해주세요."})
-        current_password = data.get('current_password')
-
-        # 2. 비밀번호 일치 여부 확인
+    def validate_current_password(self, value):
         user = self.context['request'].user
-        if not user.check_password(current_password):
-            raise serializers.ValidationError({"current_password": "비밀번호가 일치하지 않습니다."})
-
-        return data
+        if not user.check_password(value):
+            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
+        return value
 
     def update(self, instance, validated_data):
-        # 비밀번호 필드는 실제 모델 업데이트에 쓰이지 않으므로 제거
-        validated_data.pop('current_password', None)
-        return super().update(instance, validated_data)
-    
+        user_data = validated_data.pop('user', {})
+        user = instance.user
 
-class UserDetailSerializer(serializers.ModelSerializer):
-    """
-    일반 유저 정보 조회용 (tutor_intro가 있을 때만 포함)
-    타인이 내 정보를 보거나, 내가 내 정보를 단순히 확인하는 경우
-    비밀번호 검증 로직 X -> 실수로 조회 응답에 포함되지 않음
-    """
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'name', 'profile_image', 'bio', 'tutor_intro']
+        # 1. User 모델 정보 업데이트 (사진 등)
+        if 'profile_image' in user_data:
+            user.profile_image = user_data.get('profile_image', user.profile_image)
+            user.save()
 
-    def to_representation(self, instance):
-        # 1. 일단 전체 데이터를 직렬화합니다.
-        ret = super().to_representation(instance)
-        
-        # 2. tutor_intro가 비어있거나 None이면 응답 데이터에서 제외합니다.
-        if not ret.get('tutor_intro'):
-            ret.pop('tutor_intro', None)
-            
-        return ret
+        # 2. TutorProfile 모델 정보 업데이트 (경력)
+        instance.experience = validated_data.get('experience', instance.experience)
+        instance.save()
+
+        return instance

@@ -2,12 +2,20 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, generics
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+<<<<<<< HEAD
+from .models import TutorProfile
+from .serializers import UserRegisterSerializer, ProfileSerializer, TutorIntroductionSerializer, TutorProfileUpdateSerializer
+
+=======
 
 from .serializers import UserRegisterSerializer, ProfileSerializer, UserDetailSerializer, TutorProfileUpdateSerializer
 from .models import User
+>>>>>>> develop
 
 # =========================================================
 # 👤 회원가입 API
@@ -121,23 +129,33 @@ class MyTutorSettingsView(generics.RetrieveUpdateAPIView):
     )
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
-    
-# =========================================================
-# 튜터 공개 프로필 API (타인 조회용)
-# =========================================================
-class TutorPublicDetailView(generics.RetrieveAPIView):
-    """
-    GET : 특정 유저(튜터)의 공개 프로필 조회
-    """
-    queryset = User.objects.all()
-    serializer_class = UserDetailSerializer
-    permission_classes = [IsAuthenticated]
-    lookup_field = 'id'
 
-    @swagger_auto_schema(
-        operation_summary="튜터 공개 프로필 조회",
-        operation_description="특정 ID를 가진 유저의 공개 프로필을 조회합니다.",
-        responses={200: UserDetailSerializer, 401: "인증 정보가 없습니다.", 404: "유저를 찾을 수 없습니다."}
-    )
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+## Tutor 소개 페이지 접근
+User = get_user_model()
+
+class TutorPublicDetailView(generics.RetrieveAPIView):
+    queryset = User.objects.select_related('tutor_profile').all()
+    serializer_class = TutorIntroductionSerializer
+    lookup_field = 'id' # /tutors/1/ 형태로 접근
+
+    def get_object(self):
+        user = super().get_object()
+        # 튜터가 아닌 유저(강의가 없는 유저)의 페이지에 접근하면 404를 띄울 수도 있음
+        # if not user.courses.exists():
+        #     raise Http404("튜터 정보가 없습니다.")
+        return user
+    
+class MyTutorProfileDetailView(generics.RetrieveUpdateAPIView):
+    serializer_class = TutorProfileUpdateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        # 로그인한 유저의 TutorProfile을 가져옴. 없으면 404 혹은 생성.
+        # 여기서는 안전하게 get_or_create를 사용하거나, 이미 생성되었다고 가정합니다.
+        tutor_profile, created = TutorProfile.objects.get_or_create(user=self.request.user)
+        return tutor_profile
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context

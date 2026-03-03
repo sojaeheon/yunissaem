@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -33,4 +34,19 @@ class User(AbstractUser):
     bio=models.CharField(max_length=50, blank=True)
     profile_image=models.URLField(blank=True)
     created_at=models.DateTimeField(auto_now_add=True)
-    tutor_intro = models.TextField(blank=True, verbose_name="튜터 상세 소개 및 경력") # tutor 소개 페이지 제공 위함
+
+
+class TutorProfile(models.Model):
+    # User 모델과 1:1 연결 (튜터인 유저만 이 객체를 가짐) -> course를 생성하면 자동으로 table 상에 데이터 생성됨
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='tutor_profile'
+    )
+    # 강사 경력, 학력 등 상세 소개 (bio와는 별도)
+    experience = models.TextField(blank=True, verbose_name="강사 경력 및 상세 소개")
+    # 필요한 경우 추가 (예: 대표 연락처, 전문 분야 등)
+    # major = models.CharField(max_length=50, blank=True)
+
+    def __str__(self):
+        return f"{self.user.name} 튜터 프로필"
