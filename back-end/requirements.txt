@@ -1,3 +1,4 @@
+django-channels
 asgiref==3.9.1
 certifi==2025.8.3
 cffi==1.17.1
@@ -14,6 +15,8 @@ django-phonenumber-field==8.3.0
 django-redis==6.0.0
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.1
+django-channels
+daphne
 drf-yasg==1.21.11
 gunicorn==21.2.0
 idna==3.10

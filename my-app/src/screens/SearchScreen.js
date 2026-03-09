@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -59,16 +58,44 @@ export default function SearchScreen({ navigation }) {
   // ---------------------------------------
   // 검색 실행 (서버 요청 → 실패 시 더미 데이터 대체)
   // ---------------------------------------
-  const handleSearch = async () => {
-    if (!query.trim()) return;
+  const executeSearch = async (rawQuery) => {
+    const trimmedQuery = (rawQuery || "").trim();
+    if (!trimmedQuery) return;
 
     try {
       // 1️⃣ 서버 요청
-      const res = await axios.get(`${BASE_URL}/search/?q=${encodeURIComponent(query)}`);
-      setResults(res.data);
+      const encodedQuery = encodeURIComponent(trimmedQuery);
+      const res = await axios.get(
+        `${BASE_URL}/courses/search/?q=${encodedQuery}&filter=content`
+      );
+      const searched = Array.isArray(res.data?.results) ? res.data.results : [];
+      const normalized = searched.map((item) => ({
+        id: item.id,
+        title: item.title,
+        tutor: item.tutor_name || "튜터 정보 없음",
+        thumbnail: item.thumbnail_image_url?.startsWith("/")
+          ? SERVER_BASE + item.thumbnail_image_url
+          : item.thumbnail_image_url,
+        rating: Number(item.average_rating ?? 0),
+        enrolled_count: item.current_tutees_count ?? 0,
+        capacity: item.max_tutees ?? 0,
+      }));
+      const dedupedById = Array.from(
+        new Map(normalized.map((item) => [String(item.id), item])).values()
+      );
+      const dedupedByLecture = Array.from(
+        new Map(
+          dedupedById.map((item) => {
+            const titleKey = (item.title || "").trim().toLowerCase();
+            const tutorKey = (item.tutor || "").trim().toLowerCase();
+            return [`${titleKey}__${tutorKey}`, item];
+          })
+        ).values()
+      );
+      setResults(dedupedByLecture);
 
       // 2️⃣ 최근 검색어 업데이트
-      const updated = [query, ...recentSearches.filter((q) => q !== query)].slice(0, 5);
+      const updated = [trimmedQuery, ...recentSearches.filter((q) => q !== trimmedQuery)].slice(0, 5);
       setRecentSearches(updated);
       await AsyncStorage.setItem("recentSearches", JSON.stringify(updated));
     } catch (error) {
@@ -106,10 +133,14 @@ export default function SearchScreen({ navigation }) {
       ];
 
       const filtered = dummyData.filter((item) =>
-        item.title.toLowerCase().includes(query.toLowerCase())
+        item.title.toLowerCase().includes(trimmedQuery.toLowerCase())
       );
       setResults(filtered);
     }
+  };
+
+  const handleSearch = async () => {
+    await executeSearch(query);
   };
 
   // ---------------------------------------
@@ -140,7 +171,7 @@ export default function SearchScreen({ navigation }) {
             style={styles.tag}
             onPress={() => {
               setQuery(item);
-              handleSearch();
+              executeSearch(item);
             }}
           >
             <Text>{item}</Text>
@@ -151,7 +182,13 @@ export default function SearchScreen({ navigation }) {
       {/* 🕑 최근 검색어 */}
       <Text style={styles.sectionTitle}>🕑 최근 검색어</Text>
       {recentSearches.map((item, idx) => (
-        <TouchableOpacity key={idx} onPress={() => setQuery(item)}>
+        <TouchableOpacity
+          key={idx}
+          onPress={() => {
+            setQuery(item);
+            executeSearch(item);
+          }}
+        >
           <Text style={styles.recent}>{item}</Text>
         </TouchableOpacity>
       ))}
