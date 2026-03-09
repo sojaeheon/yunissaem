@@ -73,11 +73,13 @@ def home_view(request):
         except (User.DoesNotExist, ValueError):
             user = None
 
+    is_authenticated_user = bool(user and getattr(user, "is_authenticated", False))
+
     courses = {
         'popular_courses': get_popular_courses(limit=10),
         'new_courses': get_new_courses(days=60, limit=10),
-        'my_wishlist': get_wishlist_courses(user, limit=10),
-        'my_attending_courses': get_attending_courses(user, limit=10),
+        'my_wishlist': get_wishlist_courses(user, limit=10) if is_authenticated_user else [],
+        'my_attending_courses': get_attending_courses(user, limit=10) if is_authenticated_user else [],
     }
 
     response_data = {

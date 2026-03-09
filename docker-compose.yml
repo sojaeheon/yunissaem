@@ -1,36 +1,34 @@
-# services : 실행하려는 컨테이너들을 정의한다.
-# web(Django), db(PostgreSQL), redis,nginx 4개의 서비스
+﻿# 서비스 정의
+# backend(Django), postgres(PostgreSQL), redis, nginx, frontend(Expo)
 services:
   ###################################
-  # BACKEND – Django REST API
+  # BACKEND: Django REST API
   ###################################
   backend:
-    # ./api 디렉터리의 Dockerfile을 사용하여 이미지를 빌드한다
+    # back-end 폴더의 Dockerfile로 이미지 빌드
     build: ./back-end
-    
-    container_name : yunissaem-backend
-    
-    # [./back-end:/app] : 호스트의 ./back-end 디렉터리를 컨테이너의 /app 디렉터리와 동기화한다
-    # 코드 변경 시 컨테이너를 다시 빌드할 필요가 없다
+
+    container_name: yunissaem-backend
+
+    # 로컬 소스코드를 컨테이너 /app에 마운트
+    # static/media는 볼륨으로 분리
     volumes:
       - ./back-end:/app
       - static_volume:/app/static
       - media_volume:/app/media
-    
-    # 8000번 포트를 다른 컨테이너에 노출시킨다.
-    # Nginx가 이 포트로 요청을 전달한다.
-    # nginx.conf에 django 포트에 대한 내용이 작성되어 있으므로 yml에  따로 작성하지 않아도 된다.
-    posrts:
+
+    # 내부 8000 포트를 호스트 8000으로 노출
+    ports:
       - "8000:8000"
     expose:
       - 8000
 
-    # db와 redis 서비스가 먼저 실행되도록 의존성을 설정합니다.
+    # postgres/redis가 먼저 뜨도록 의존성 설정
     depends_on:
       - postgres
       - redis
-      
-    # Django 애플리케이션이 데이터베이스에 연결하는데 필요한 환경변수들을 설정
+
+    # Django 및 DB/Redis 연결 환경변수
     environment:
       DJANGO_SETTINGS_MODULE: yunissaem_api.settings
 
@@ -57,13 +55,16 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
     networks:
       - yuninet
 
   ###################################
-  # Redis – 로그인 세션 / 채팅 큐
+  # Redis: 캐시/세션/채팅용
   ###################################
   redis:
     image: redis:7
@@ -72,12 +73,9 @@ services:
       - "6379:6379"
     networks:
       - yuninet
-  
 
-
-  # nginx 컨테이너
   ###################################
-  # NGINX – API Reverse Proxy
+  # NGINX: Reverse Proxy
   ###################################
   nginx:
     container_name: yunissaem-nginx
@@ -93,17 +91,17 @@ services:
     networks:
       - yuninet
 
-  # frontend 컨테이너 (React Native / Expo)
+  # FRONTEND: React Native / Expo
   frontend:
     build: ./my-app
     volumes:
       - ./my-app:/app
       - /app/node_modules
     ports:
-      - "19000:19000"   # Metro bundler (Expo)
+      - "19000:19000"   # Expo Metro
       - "19001:19001"   # Expo DevTools
-      - "19006:19006"   # Expo web
-      - "8081:8081"     # Metro web fallback
+      - "19006:19006"   # Expo Web
+      - "8081:8081"     # Metro fallback
     environment:
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
       - HOST=0.0.0.0
@@ -112,11 +110,8 @@ services:
     tty: true
     networks:
       - yuninet
-      
 
-# postgres_data볼륨을 명시적으로 정의한다
-# "우리 프로젝트는 postgres_data라는 이름의 데이터 저장 공간을 공식적으로 사용할거야"
-# 라고 선언하고 등록하는 것과 같다.
+# Docker named volume 정의
 volumes:
   pgdata:
   static_volume:

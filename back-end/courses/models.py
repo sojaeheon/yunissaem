@@ -98,9 +98,10 @@ class Course(models.Model):
 
     # 가중치 계산 결과를 popularity_score에 저장함
     def update_popularity_score(self):
+        wishlist_count = self.wish_users.count()
         self.popularity_score = (
-            self.current_students * 0.5 +
-            self.wishlist_count * 0.3 +
+            self.current_tutees_count * 0.5 +
+            wishlist_count * 0.3 +
             self.review_count * 0.15 +
             self.average_rating * 0.05
         )

@@ -16,4 +16,4 @@ echo "🌱 Seeding dummy data..."
 python seed_all_data.py || echo "⚠️ Seed script failed (ignored)."
 
 echo "🔥 Starting Django Gunicorn server..."
-gunicorn yunissaem_api.wsgi:application --bind 0.0.0.0:8000
+gunicorn yunissaem_api.asgi:application --bind 0.0.0.0:8000 --worker-class uvicorn.workers.UvicornWorker

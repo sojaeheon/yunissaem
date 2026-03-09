@@ -127,6 +127,14 @@ class ChatRoomListAPIView(APIView):
         user = request.user
         redis = get_redis_connection("default")
 
+        # Redis에서 읽은 값을 타입에 상관없이 문자열로 변환한다.
+        def decode_redis_value(value):
+            if value is None:
+                return None
+            if isinstance(value, bytes):
+                return value.decode()
+            return str(value)
+
         chatrooms = ChatRoom.objects.filter(
             Q(tutor=user) | Q(tutee=user)
         ).select_related("courses", "tutor", "tutee")
@@ -168,8 +176,8 @@ class ChatRoomListAPIView(APIView):
                     last_message = ""
                     last_message_time = None
             else:
-                last_message = last_message.decode()
-                last_message_time = last_message_time.decode() if last_message_time else None
+                last_message = decode_redis_value(last_message)
+                last_message_time = decode_redis_value(last_message_time)
 
             result.append({
                 "room_id": room.id,
